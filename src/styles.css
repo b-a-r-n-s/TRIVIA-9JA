@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root { color-scheme: dark; font-family: 'DM Sans', sans-serif; color: #f3efe5; background: #0a0c0b; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: #0a0c0b; }
+button { font: inherit; }
+.app-shell { position: relative; min-height: 100vh; max-width: 1180px; margin: 0 auto; padding: 22px 20px 34px; overflow: hidden; }
+.pattern { position: absolute; width: 430px; height: 430px; right: -150px; top: 90px; opacity: .12; transform: rotate(18deg); background: repeating-linear-gradient(135deg, transparent 0 24px, #176b49 25px 27px, transparent 28px 52px); mask-image: radial-gradient(circle, black, transparent 70%); pointer-events: none; }
+.topbar { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
+.mini-mark { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #263029; border-radius: 12px; color: #d2aa61; font: 700 13px 'Space Grotesk'; letter-spacing: -.04em; }
+.topbar-actions { display: flex; align-items: center; gap: 9px; color: #79827d; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #1b9b65; }
+.icon-button { margin-left: 8px; width: 34px; height: 34px; border: 1px solid #263029; border-radius: 50%; background: #111512; color: #aab1ac; cursor: pointer; }
+.hero { position: relative; z-index: 1; padding: 72px 0 42px; max-width: 760px; }
+.eyebrow, .section-label { margin: 0; color: #a08a61; font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+.hero h1 { margin: 11px 0 4px; font: 700 clamp(56px, 13vw, 126px)/.84 'Space Grotesk'; letter-spacing: -.075em; }
+.hero h1 em { color: #18764e; font-style: normal; }
+.tagline { margin: 20px 0 0; max-width: 430px; color: #aab1ac; font-size: 15px; line-height: 1.55; }
+.gold-line { width: 68px; height: 2px; margin-top: 25px; background: #c9a45f; }
+.language-section { position: relative; z-index: 2; margin-bottom: 22px; }
+.language-control { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 10px; max-width: 640px; padding: 4px; background: #101411; border: 1px solid #222a25; border-radius: 13px; }
+.language { border: 0; border-radius: 9px; padding: 11px 6px; color: #7e8781; background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; }
+.language.active { color: #f4f0e6; background: #1b2720; box-shadow: inset 0 0 0 1px #304238; }
+.modes { position: relative; z-index: 2; display: grid; grid-template-columns: 1.15fr .85fr; gap: 14px; }
+.mode-card { min-height: 330px; padding: 24px; border-radius: 20px; border: 1px solid #252d28; position: relative; overflow: hidden; }
+.solo-card { background: #0f5136; border-color: #176c49; }
+.community-card { background: #101311; }
+.mode-topline { display: flex; justify-content: space-between; color: #a8c2b4; font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+.community-card .mode-topline { color: #777e78; }
+.mode-icon { margin-top: 34px; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; background: rgba(5,22,15,.28); color: #f0dfbc; font-size: 21px; }
+.trophy { color: #c9a45f; background: #1b1914; }
+.mode-card h2 { margin: 18px 0 10px; font: 600 clamp(28px, 5vw, 45px)/.95 'Space Grotesk'; letter-spacing: -.055em; }
+.mode-card p { max-width: 450px; margin: 0; color: #b7c2bc; font-size: 13px; line-height: 1.55; }
+.mode-meta { display: flex; flex-wrap: wrap; gap: 8px 15px; margin-top: 22px; color: #91a69b; font-size: 9px; font-weight: 700; letter-spacing: .1em; }
+.mode-meta .free { color: #c9a45f; }
+.primary-action, .secondary-action { margin-top: 23px; width: 100%; border-radius: 10px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.primary-action { color: #0b281c; background: #e9e1d0; border: 0; }
+.secondary-action { color: #cdb67f; background: transparent; border: 1px solid #655437; }
+.leaderboard-preview { position: relative; z-index: 2; display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-top: 14px; padding: 20px 4px 8px; border-top: 1px solid #1e2521; }
+.leaderboard-preview h3 { margin: 7px 0 0; font: 600 19px 'Space Grotesk'; }
+.text-button { border: 0; background: none; color: #c9a45f; cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
+footer { position: relative; z-index: 2; margin-top: 55px; color: #4e5751; font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+footer span { color: #8a7043; margin: 0 6px; }
+@media (max-width: 720px) { .app-shell { padding: 18px 16px 28px; } .hero { padding-top: 62px; } .modes { grid-template-columns: 1fr; } .mode-card { min-height: 310px; } .community-card { min-height: 295px; } }
+@media (min-width: 721px) { .mode-card .primary-action, .mode-card .secondary-action { width: 210px; } }
