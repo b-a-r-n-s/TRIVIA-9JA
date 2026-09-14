@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { isAnonymousPlayer, linkGuestEmail, supabase } from '../lib/supabase'
 
 export default function ProfilePanel({ onClose }: { onClose: () => void }) {
   const [displayName, setDisplayName] = useState('Naija Player')
@@ -7,10 +7,69 @@ export default function ProfilePanel({ onClose }: { onClose: () => void }) {
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('dark')
   const [language, setLanguage] = useState('en')
   const [saved, setSaved] = useState(false)
+  const [anonymous, setAnonymous] = useState(false)
+  const [accountEmail, setAccountEmail] = useState('')
+  const [linking, setLinking] = useState(false)
+  const [linkMessage, setLinkMessage] = useState('')
+  const [linkError, setLinkError] = useState('')
 
-  useEffect(() => { supabase.auth.getUser().then(async ({ data }) => { if (!data.user) return; const { data: profile } = await supabase.from('profiles').select('display_name,username,theme,preferred_language').eq('user_id', data.user.id).maybeSingle(); if (profile) { setDisplayName(profile.display_name); setUsername(profile.username || ''); setTheme(profile.theme || 'dark'); setLanguage(profile.preferred_language || 'en') } }) }, [])
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return
+      setAnonymous(Boolean(data.user.is_anonymous))
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name,username,theme,preferred_language')
+        .eq('user_id', data.user.id)
+        .maybeSingle()
+      if (profile) {
+        setDisplayName(profile.display_name)
+        setUsername(profile.username || '')
+        setTheme(profile.theme || 'dark')
+        setLanguage(profile.preferred_language || 'en')
+      }
+    })
+  }, [])
 
-  const save = async () => { const user = (await supabase.auth.getUser()).data.user; if (!user) return; const { error } = await supabase.from('profiles').update({ display_name: displayName.trim() || 'Naija Player', username: username.trim().toLowerCase(), theme, preferred_language: language }).eq('user_id', user.id); if (!error) { setSaved(true); window.setTimeout(() => setSaved(false), 1800) } }
+  const save = async () => {
+    const user = (await supabase.auth.getUser()).data.user
+    if (!user) return
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        display_name: displayName.trim() || 'Naija Player',
+        username: username.trim().toLowerCase(),
+        theme,
+        preferred_language: language,
+      })
+      .eq('user_id', user.id)
+    if (!error) {
+      setSaved(true)
+      window.setTimeout(() => setSaved(false), 1800)
+    }
+  }
 
-  return <div className="profile-overlay"><section className="profile-panel"><header className="profile-panel-head"><div><p className="eyebrow">PLAYER PROFILE</p><h2>Your TRIVIA 9JA identity.</h2></div><button onClick={onClose} className="auth-close">×</button></header><div className="profile-identity"><div className="large-avatar">{displayName.trim().charAt(0).toUpperCase() || '?'}</div><div><strong>@{username || 'player'}</strong><span>Naija knowledge seeker</span></div><button className="avatar-button">CHANGE PFP</button></div><div className="settings-grid"><label>DISPLAY NAME<input value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={24}/></label><label>USERNAME<input value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} maxLength={24}/></label><label>LANGUAGE<select value={language} onChange={e => setLanguage(e.target.value)}><option value="en">English</option><option value="ha">Hausa</option><option value="yo">Yorùbá</option><option value="ig">Igbo</option></select></label><label>APPEARANCE<select value={theme} onChange={e => setTheme(e.target.value as typeof theme)}><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label></div><div className="profile-actions"><button className="secondary-action" onClick={onClose}>CANCEL</button><button className="primary-action" onClick={save}>{saved ? 'SAVED ✓' : 'SAVE CHANGES →'}</button></div></section></div>
+  const protectProgress = async () => {
+    setLinking(true)
+    setLinkMessage('')
+    setLinkError('')
+    try {
+      await linkGuestEmail(accountEmail)
+      setAnonymous(false)
+      setLinkMessage('Check your email to confirm. Your TRIVIA 9JA progress stays on this same player.')
+    } catch (e) {
+      setLinkError(e instanceof Error ? e.message : 'Could not protect your progress.')
+    } finally {
+      setLinking(false)
+    }
+  }
+
+  const refreshAnonymousState = async () => setAnonymous(await isAnonymousPlayer())
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(() => { void refreshAnonymousState() })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  return <div className="profile-overlay"><section className="profile-panel"><header className="profile-panel-head"><div><p className="eyebrow">PLAYER PROFILE</p><h2>Your TRIVIA 9JA identity.</h2></div><button onClick={onClose} className="auth-close">×</button></header><div className="profile-identity"><div className="large-avatar">{displayName.trim().charAt(0).toUpperCase() || '?'}</div><div><strong>@{username || 'player'}</strong><span>{anonymous ? 'Guest player' : 'Naija knowledge seeker'}</span></div><button className="avatar-button">CHANGE PFP</button></div>{anonymous && <div className="auth-message" style={{marginBottom:16}}><strong>GUEST PLAYER</strong><br/>You can play without an account. Protect your progress whenever you are ready.</div>}{anonymous && <div className="settings-grid" style={{marginBottom:18}}><label>SAVE YOUR PROGRESS<input type="email" value={accountEmail} onChange={e => setAccountEmail(e.target.value)} placeholder="you@example.com" autoComplete="email"/></label><button className="primary-action" onClick={protectProgress} disabled={linking}>{linking ? 'SENDING…' : 'PROTECT MY PROGRESS →'}</button>{linkMessage && <p className="auth-message">{linkMessage}</p>}{linkError && <p className="auth-message" style={{background:'#361917',color:'#e7a49a'}}>{linkError}</p>}</div>}<div className="settings-grid"><label>DISPLAY NAME<input value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={24}/></label><label>USERNAME<input value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} maxLength={24}/></label><label>LANGUAGE<select value={language} onChange={e => setLanguage(e.target.value)}><option value="en">English</option><option value="ha">Hausa</option><option value="yo">Yorùbá</option><option value="ig">Igbo</option></select></label><label>APPEARANCE<select value={theme} onChange={e => setTheme(e.target.value as typeof theme)}><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label></div><div className="profile-actions"><button className="secondary-action" onClick={onClose}>CANCEL</button><button className="primary-action" onClick={save}>{saved ? 'SAVED ✓' : 'SAVE CHANGES →'}</button></div></section></div>
 }
