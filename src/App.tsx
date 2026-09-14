@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import { supabase, ensureGuestSession } from './lib/supabase'
 import ProfilePanel from './components/ProfilePanel'
 import FriendMode from './FriendMode'
 
@@ -19,7 +19,7 @@ const hostLines:Record<Language,{name:string;role:string;intro:string[];correct:
  ig:{name:'Miss Chiamaka',role:'ONYE NDU AJỤJỤ',intro:['Ka anyị hụ ihe ị maara.','Ajụjụ gị abịala. Lezie anya.'],correct:['Ọ dị mma. Azịza ziri ezi.','Ziri ezi. Gaa n’ihu.'],wrong:['Ọ bụghị nke ahụ. Ka anyị gaa n’ihu.','Ọ fọrọ nke nta. Chee echiche ọzọ.'],thinking:['Chee echiche nke ọma.','Egbula ọsọ.'],urgent:['Oge na-aga. Họrọ ugbu a.'],finish:['Nke ahụ bụ njedebe.']}
 }
 
-function BrainIcon(){return <svg viewBox="0 0 64 64"><path d="M31 12c-7-6-17-1-16 7-7 1-9 10-4 14-5 6 0 14 7 13 1 8 12 9 16 3M33 12c7-6 17-1 16 7 7 1 9 10 4 14 5 6 0 14-7 13-1 8-12 9-16 3M31 12v37M22 21c4 0 7 3 7 7M42 21c-4 0-7 3-7 7M18 37c5 0 8-2 10-5M46 37c-5 0-8-2-10-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>}
+function BrainIcon(){return <svg viewBox="0 0 64 64"><path d="M31 12c-7-6-17-1-16 7-7 1-9 10-4 14-5 6 0 14 7 13 1 8 12 9 16 3M33 12c7-6 17-1 16 7 7 1 9 10 4 14 5 6 0 14-7 13-1 8-12 9-16 3M31 12v37M22 21c4 0 7 3 7 7M42 21c-4 0-7-3-7 7M18 37c5 0 8-2 10-5M46 37c-5 0-8-2-10-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>}
 function TrophyIcon(){return <svg viewBox="0 0 64 64"><path d="M21 11h22v17c0 8-5 14-11 14s-11-6-11-14V11Z" fill="none" stroke="currentColor" strokeWidth="2.4"/><path d="M21 17H12v5c0 8 5 12 11 12M43 17h9v5c0 8-5 12-11 12M32 42v10M23 54h18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>}
 const Arrow=()=> <span className="arrow">→</span>
 
@@ -30,7 +30,7 @@ function Host({language,state}:{language:Language;state:HostState}){
  return <div className={`quiz-host host-${state}`} aria-live="polite"><div className="host-avatar"><div className="host-head"><span className="host-hair"/><span className="host-eye left"/><span className="host-eye right"/><span className="host-mouth"/></div><span className="host-body"/></div><div className="host-bubble"><div><strong>{host.name}</strong><small>{host.role}</small></div><p>{line}</p><i>{mood}</i></div></div>
 }
 
-async function invoke<T>(name:string, body:Record<string,unknown>):Promise<T>{const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in to play.');const {data,error}=await supabase.functions.invoke(name,{body,headers:{Authorization:`Bearer ${session.access_token}`}});if(error)throw error;return data as T}
+async function invoke<T>(name:string, body:Record<string,unknown>):Promise<T>{await ensureGuestSession();const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Could not create a player session.');const {data,error}=await supabase.functions.invoke(name,{body,headers:{Authorization:`Bearer ${session.access_token}`}});if(error)throw error;return data as T}
 
 function App(){
  const [screen,setScreen]=useState<Screen>('home'); const [language,setLanguage]=useState<Language>('en'); const [signedIn,setSignedIn]=useState(false); const [menuOpen,setMenuOpen]=useState(false); const [profileOpen,setProfileOpen]=useState(false); const [authMode,setAuthMode]=useState<'signin'|'signup'|null>(null); const [coins,setCoins]=useState(0);
@@ -39,7 +39,7 @@ function App(){
  const [leaderboard,setLeaderboard]=useState<Array<{rank:number;user_id:string;display_name:string|null;username:string|null;score:number;created_at:string}>>([]); const [leaderboardLoading,setLeaderboardLoading]=useState(false);
  const [hintLoading,setHintLoading]=useState(false); const [hint,setHint]=useState<HintState>({eliminate:null,clue:null,usedEliminate:false,usedClue:false});
  const q=questions[index];
- useEffect(()=>{supabase.auth.getSession().then(({data})=>setSignedIn(Boolean(data.session)));const {data:l}=supabase.auth.onAuthStateChange((_e,s)=>setSignedIn(Boolean(s)));return()=>l.subscription.unsubscribe()},[])
+ useEffect(()=>{let active=true;supabase.auth.getSession().then(({data})=>{if(active&&data.session)setSignedIn(true)});ensureGuestSession().then(()=>{if(active)setSignedIn(true)}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Guest mode is unavailable right now.')});const {data:l}=supabase.auth.onAuthStateChange((_e,s)=>setSignedIn(Boolean(s)));return()=>{active=false;l.subscription.unsubscribe()}},[])
  useEffect(()=>{if(!signedIn)return;supabase.from('player_progress').select('coins,current_level').maybeSingle().then(({data})=>{if(data){setCoins(data.coins||0);setLevel(Math.max(1,Math.min(10,data.current_level||1)))}})},[signedIn])
  const finishCommunity=useCallback(async()=>{if(!communityAttempt||communityFinal)return;try{const data=await invoke<CommunityFinal>('finish_community_attempt',{attempt_id:communityAttempt.id});setCommunityFinal(data);setCommunityScore(data.score);setFinished(true)}catch(e){const message=e instanceof Error?e.message:'Could not finish Community Challenge.';if(/still active/i.test(message)){window.setTimeout(()=>{void finishCommunity()},300)}else{setError(message);setFinished(true)}}},[communityAttempt,communityFinal])
  const finishSolo=useCallback(async()=>{try{const data=await invoke<{completed:boolean;new_current_level:number;score:number}>('finish_solo_level',{language,level});setSoloScore(data.score);setLevel(Math.max(1,Math.min(10,data.new_current_level||level)));setFinished(true)}catch(e){const message=e instanceof Error?e.message:'Could not finish level.';if(/not complete/i.test(message)){window.setTimeout(()=>{void finishSolo()},500)}else{setError(message);setFinished(true)}}},[language,level])
