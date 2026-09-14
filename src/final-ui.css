@@ -53,6 +53,30 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .auth-backdrop,.profile-overlay{background:rgba(2,5,3,.82)}
 .quick-menu{box-shadow:0 22px 70px rgba(0,0,0,.65)}
 
+/* Step 2 — gameplay interaction layer */
+.game-shell{overscroll-behavior-y:contain}
+.question-stage{contain:layout paint}
+.question-card{position:relative;overflow:hidden;will-change:transform}
+.question-card:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#1aa46e,transparent);opacity:.28;pointer-events:none}
+.answers{touch-action:manipulation}
+.answer{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none}
+.answer:disabled{cursor:default}
+.answer.selected{transform:none}
+.answer.correct:disabled{opacity:1}
+.answer.wrong:disabled{opacity:1}
+.answer.eliminated{pointer-events:none}
+.feedback{min-height:48px}
+.game-stat{font-variant-numeric:tabular-nums}
+.community-timer,.timer,.countdown{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.host-correct .host-bubble{border-color:rgba(42,182,123,.42)}
+.host-wrong .host-bubble{border-color:rgba(179,92,80,.42)}
+.host-urgent .host-bubble{border-color:rgba(216,173,92,.62)}
+.hint-tools{position:relative;z-index:2}
+.hint-button{touch-action:manipulation}
+.hint-button:active:not(:disabled){transform:scale(.985)}
+.hint-panel{animation:hint-in .18s ease both}
+@keyframes hint-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+
 @media (max-width:760px){
   .app-shell{padding:14px 18px 30px}
   .hero{min-height:330px;padding:92px 0 36px}
@@ -83,6 +107,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   .question-card{padding:27px 20px;border-radius:19px}
   .question-card h1{font-size:clamp(27px,7.5vw,40px)}
   .answer{padding:14px 13px;min-height:56px}
+  .game-topbar{gap:8px}
+  .game-stat{padding:8px 10px;font-size:11px}
+  .feedback{font-size:10px}
 }
 @media (max-width:390px){
   .app-shell{padding-left:14px;padding-right:14px}
@@ -97,6 +124,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   .mode-card h2{font-size:31px}
   .mode-meta{gap:8px 12px}
   .free-badge{position:static;display:inline-block;margin:10px 0 2px}
+  .game-shell{padding-left:12px;padding-right:12px}
+  .question-card{padding:23px 16px}
+  .answer{min-height:54px;gap:10px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
