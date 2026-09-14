@@ -19,7 +19,7 @@ const hostLines:Record<Language,{name:string;role:string;intro:string[];correct:
  ig:{name:'Miss Chiamaka',role:'ONYE NDU AJỤJỤ',intro:['Ka anyị hụ ihe ị maara.','Ajụjụ gị abịala. Lezie anya.'],correct:['Ọ dị mma. Azịza ziri ezi.','Ziri ezi. Gaa n’ihu.'],wrong:['Ọ bụghị nke ahụ. Ka anyị gaa n’ihu.','Ọ fọrọ nke nta. Chee echiche ọzọ.'],thinking:['Chee echiche nke ọma.','Egbula ọsọ.'],urgent:['Oge na-aga. Họrọ ugbu a.'],finish:['Nke ahụ bụ njedebe.']}
 }
 
-function BrainIcon(){return <svg viewBox="0 0 64 64"><path d="M31 12c-7-6-17-1-16 7-7 1-9 10-4 14-5 6 0 14 7 13 1 8 12 9 16 3M33 12c7-6 17-1 16 7 7 1 9 10 4 14 5 6 0 14-7 13-1 8-12 9-16 3M31 12v37M22 21c4 0 7 3 7 7M42 21c-4 0-7-3-7 7M18 37c5 0 8-2 10-5M46 37c-5 0-8-2-10-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>}
+function BrainIcon(){return <svg viewBox="0 0 64 64"><path d="M31 12c-7-6-17-1-16 7-7 1-9 10-4 14-5 6 0 14 7 13 1 8 12 9 16 3M33 12c7-6 17-1 16 7 7 1 9 10 4 14 5 6 0 14-7 13-1 8-12 9-16 3M31 12v37M22 21c4 0 7 3 7 7M42 21c-4 0-7 3-7 7M18 37c5 0 8-2 10-5M46 37c-5 0-8-2-10-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>}
 function TrophyIcon(){return <svg viewBox="0 0 64 64"><path d="M21 11h22v17c0 8-5 14-11 14s-11-6-11-14V11Z" fill="none" stroke="currentColor" strokeWidth="2.4"/><path d="M21 17H12v5c0 8 5 12 11 12M43 17h9v5c0 8-5 12-11 12M32 42v10M23 54h18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>}
 const Arrow=()=> <span className="arrow">→</span>
 
