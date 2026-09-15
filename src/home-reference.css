@@ -1,0 +1,83 @@
+/* TRIVIA 9JA — approved mobile home composition */
+@media (max-width:760px){
+  html,body,#root{background:#030605;overflow-x:hidden}
+  body{min-width:320px}
+  .app-shell:not(.inner-screen){width:100%;max-width:none;min-height:100svh;padding:0 14px 12px!important;background:radial-gradient(circle at 88% 18%,rgba(17,112,75,.12),transparent 24%),radial-gradient(circle at 10% 58%,rgba(9,73,49,.08),transparent 28%),#030605!important}
+
+  .app-shell:not(.inner-screen) .topbar{height:64px;padding:8px 0;border-bottom:1px solid rgba(129,151,139,.12)!important;gap:8px}
+  .app-shell:not(.inner-screen) .mini-mark{flex:0 0 52px;width:52px!important;height:52px!important;border-radius:16px!important;border:1px solid #26332c!important;background:#080d0a!important;color:transparent!important;font-size:0!important;position:relative}
+  .app-shell:not(.inner-screen) .mini-mark:before{content:"";position:absolute;left:15px;top:19px;width:22px;height:2px;border-radius:99px;background:#eee9df;box-shadow:0 7px 0 #eee9df,0 14px 0 #eee9df}
+  .app-shell:not(.inner-screen) .topbar-actions{min-width:0;flex:1;justify-content:flex-end;gap:6px!important;color:#d7ddd8!important;letter-spacing:0!important}
+  .app-shell:not(.inner-screen) .topbar-actions .coin-pill{height:44px;min-width:70px;justify-content:center;padding:0 9px!important;border:1px solid rgba(120,145,133,.28)!important;background:#080d0a!important;border-radius:999px!important;font-size:0!important;font-weight:700!important}
+  .app-shell:not(.inner-screen) .topbar-actions .coin-pill:before{content:"₦";display:grid;place-items:center;width:28px;height:28px;margin-right:3px;border-radius:50%;background:#e4bd69;color:#17130b;font-size:13px;font-weight:900}
+  .app-shell:not(.inner-screen) .topbar-actions .coin-pill:after{content:"0";font-size:14px;color:#eee9df}
+  .app-shell:not(.inner-screen) .topbar-actions .status-dot,.app-shell:not(.inner-screen) .topbar-actions>span:not(.coin-pill){display:none!important}
+  .app-shell:not(.inner-screen) .topbar-actions:before{content:"⚡  TOP UP CREDITS";display:flex;align-items:center;justify-content:center;height:42px;padding:0 10px;border:1px solid rgba(27,164,110,.28);border-radius:999px;background:linear-gradient(180deg,rgba(12,79,54,.72),rgba(5,44,30,.72));color:#e8e5dc;font-size:8px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+  .app-shell:not(.inner-screen) .topbar-actions:after{content:"200.00";display:grid;place-items:center;height:42px;min-width:68px;padding:0 8px;border:1px solid rgba(120,145,133,.28);border-radius:999px;color:#eee9df;font-size:11px;font-weight:700;background:#080d0a}
+  .app-shell:not(.inner-screen) .topbar-actions .icon-button{flex:0 0 44px;width:44px!important;height:44px!important;margin-left:0!important;border:1px solid #26332c!important;background:#080d0a!important;font-size:0!important;position:relative}
+  .app-shell:not(.inner-screen) .topbar-actions .icon-button:before{content:"";position:absolute;left:14px;top:11px;width:13px;height:17px;border:2px solid #e9e7df;border-radius:9px 9px 5px 5px}
+  .app-shell:not(.inner-screen) .topbar-actions .icon-button:after{content:"";position:absolute;left:17px;top:30px;width:8px;height:2px;border-radius:2px;background:#e9e7df}
+
+  .app-shell:not(.inner-screen) .hero{min-height:166px!important;padding:32px 10px 16px!important;margin:0!important;overflow:hidden!important}
+  .app-shell:not(.inner-screen) .hero:after{display:none}
+  .app-shell:not(.inner-screen) .hero .eyebrow{font-size:8px!important;letter-spacing:.28em!important}
+  .app-shell:not(.inner-screen) .hero h1{margin:8px 0 0!important;font:700 clamp(52px,16vw,78px)/.78 'Space Grotesk',sans-serif!important;letter-spacing:-.09em!important;white-space:nowrap}
+  .app-shell:not(.inner-screen) .hero h1 span{display:block!important}
+  .app-shell:not(.inner-screen) .hero h1 em{display:block!important;margin:-1px 0 0 7px!important;color:#19a873!important;font-family:'DM Serif Display',serif!important;font-style:italic!important;font-weight:400!important;letter-spacing:-.11em!important;transform:skew(-7deg)!important}
+  .app-shell:not(.inner-screen) .hero .tagline{margin:8px 0 0!important;max-width:250px!important;font-size:11px!important;line-height:1.35!important;color:#d2d5ce!important}
+  .app-shell:not(.inner-screen) .gold-line{width:44px!important;height:2px!important;margin-top:11px!important}
+  .app-shell:not(.inner-screen) .hero-pattern{right:-2px!important;top:7px!important;width:145px!important;height:165px!important;opacity:.32!important;transform:rotate(13deg)!important}
+
+  .app-shell:not(.inner-screen) .language-section{margin:0 0 10px!important}
+  .app-shell:not(.inner-screen) .language-section .section-label{margin:0 0 7px 2px!important;font-size:7px!important;letter-spacing:.25em!important}
+  .app-shell:not(.inner-screen) .language-control{max-width:none!important;margin:0!important;padding:3px!important;min-height:51px;border-radius:18px!important;background:#080e0b!important;border:1px solid #1e2923!important}
+  .app-shell:not(.inner-screen) .language{min-height:45px!important;gap:4px!important;font-size:11px!important;font-weight:600!important;border-radius:14px!important}
+  .app-shell:not(.inner-screen) .language.active{background:#155d42!important;box-shadow:inset 0 0 0 1px #2b8d68!important}
+  .app-shell:not(.inner-screen) .language:before{display:inline-block;color:#dfe2dc;font-size:13px;line-height:1}
+  .app-shell:not(.inner-screen) .language:nth-child(1):before{content:"◎"}
+  .app-shell:not(.inner-screen) .language:nth-child(2):before{content:"ف"}
+  .app-shell:not(.inner-screen) .language:nth-child(3):before{content:"✣"}
+  .app-shell:not(.inner-screen) .language:nth-child(4):before{content:"◉"}
+
+  .app-shell:not(.inner-screen) .modes{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+  .app-shell:not(.inner-screen) .mode-card{min-height:0!important;height:146px!important;padding:13px!important;border-radius:21px!important;box-shadow:none!important}
+  .app-shell:not(.inner-screen) .solo-card{grid-template-columns:82px minmax(0,1fr)!important;grid-template-rows:22px 1fr!important;column-gap:13px!important;background:linear-gradient(135deg,#0c6543 0%,#063c29 100%)!important;border-color:#16845b!important}
+  .app-shell:not(.inner-screen) .community-card{grid-template-columns:82px minmax(0,1fr)!important;grid-template-rows:22px 1fr!important;column-gap:13px!important;background:linear-gradient(135deg,#0b0f0d 0%,#090c0b 100%)!important;border-color:#755a2f!important}
+  .app-shell:not(.inner-screen) .modes .mode-card:nth-child(3){display:none!important}
+  .app-shell:not(.inner-screen) .mode-topline{grid-column:1/-1!important;align-self:start!important;font-size:7px!important;letter-spacing:.19em!important}
+  .app-shell:not(.inner-screen) .mode-visual{grid-column:1!important;grid-row:2!important;min-height:0!important;height:82px!important;align-self:center!important}
+  .app-shell:not(.inner-screen) .orb{width:76px!important;height:76px!important;box-shadow:0 0 0 7px rgba(5,36,25,.3),inset 0 0 22px rgba(216,173,92,.1)!important}
+  .app-shell:not(.inner-screen) .orb svg{width:53px!important;height:53px!important}
+  .app-shell:not(.inner-screen) .orb.gold{width:76px!important;height:76px!important}
+  .app-shell:not(.inner-screen) .orb.gold svg{width:47px!important;height:47px!important}
+  .app-shell:not(.inner-screen) .mode-copy{grid-column:2!important;grid-row:2!important;align-self:start!important;min-width:0;padding-right:2px}
+  .app-shell:not(.inner-screen) .mode-card h2{margin:1px 0 5px!important;font-size:24px!important;line-height:.93!important}
+  .app-shell:not(.inner-screen) .mode-card p{display:none!important}
+  .app-shell:not(.inner-screen) .mode-meta{margin-top:7px!important;gap:6px 13px!important;font-size:7px!important;letter-spacing:.10em!important}
+  .app-shell:not(.inner-screen) .primary-action,.app-shell:not(.inner-screen) .secondary-action{position:absolute!important;left:13px!important;right:13px!important;bottom:10px!important;width:auto!important;min-height:31px!important;height:31px!important;margin:0!important;padding:0 16px!important;border-radius:999px!important;font-size:8px!important;letter-spacing:.09em!important}
+  .app-shell:not(.inner-screen) .primary-action{background:#eee7d8!important;color:#092117!important}
+  .app-shell:not(.inner-screen) .secondary-action{background:transparent!important;color:#e4bf70!important;border-color:#987840!important}
+  .app-shell:not(.inner-screen) .free-badge{top:10px!important;right:12px!important;padding:6px 8px!important;font-size:7px!important}
+  .app-shell:not(.inner-screen) .community-card .mode-copy{padding-right:62px!important}
+
+  .app-shell:not(.inner-screen) .leaderboard-preview{height:58px!important;margin-top:10px!important;padding:8px 13px!important;border-radius:18px!important;background:#080e0b!important;border-color:#26332c!important}
+  .app-shell:not(.inner-screen) .leaderboard-preview .bars{width:52px!important;height:31px!important;gap:4px!important;padding-right:11px!important}
+  .app-shell:not(.inner-screen) .bars i{width:6px!important}
+  .app-shell:not(.inner-screen) .bars i:nth-child(1){height:10px!important}.app-shell:not(.inner-screen) .bars i:nth-child(2){height:16px!important}.app-shell:not(.inner-screen) .bars i:nth-child(3){height:22px!important}.app-shell:not(.inner-screen) .bars i:nth-child(4){height:29px!important}
+  .app-shell:not(.inner-screen) .leaderboard-preview>div:nth-child(2){padding-left:11px!important}
+  .app-shell:not(.inner-screen) .leaderboard-preview .eyebrow{font-size:7px!important;letter-spacing:.2em!important}
+  .app-shell:not(.inner-screen) .leaderboard-preview h3{margin:2px 0 0!important;font-size:12px!important}
+  .app-shell:not(.inner-screen) .leaderboard-preview>.arrow{font-size:16px!important}
+  .app-shell:not(.inner-screen) footer{margin-top:9px!important;gap:9px!important;font-size:7px!important;letter-spacing:.22em!important}
+  .app-shell:not(.inner-screen) footer i{width:28px!important}
+}
+
+@media (max-width:390px){
+  .app-shell:not(.inner-screen){padding-left:11px!important;padding-right:11px!important}
+  .app-shell:not(.inner-screen) .topbar-actions:before,.app-shell:not(.inner-screen) .topbar-actions:after{display:none!important}
+  .app-shell:not(.inner-screen) .hero{min-height:155px!important;padding-top:27px!important}
+  .app-shell:not(.inner-screen) .hero h1{font-size:51px!important}
+  .app-shell:not(.inner-screen) .mode-card{height:139px!important}
+  .app-shell:not(.inner-screen) .orb{width:70px!important;height:70px!important}
+  .app-shell:not(.inner-screen) .mode-card h2{font-size:22px!important}
+}
