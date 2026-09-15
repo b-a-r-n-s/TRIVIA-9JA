@@ -52,8 +52,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .auth-card,.profile-panel{box-shadow:0 30px 100px rgba(0,0,0,.58)}
 .auth-backdrop,.profile-overlay{background:rgba(2,5,3,.82)}
 .quick-menu{box-shadow:0 22px 70px rgba(0,0,0,.65)}
-
-/* Step 2 — gameplay interaction layer */
 .game-shell{overscroll-behavior-y:contain}
 .question-stage{contain:layout paint}
 .question-card{position:relative;overflow:hidden;will-change:transform}
@@ -76,6 +74,31 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .hint-button:active:not(:disabled){transform:scale(.985)}
 .hint-panel{animation:hint-in .18s ease both}
 @keyframes hint-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+
+/* Step 4 — competitive dashboard */
+.competitive-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}
+.competitive-summary>div{min-width:0;padding:16px;border:1px solid var(--hairline);border-radius:16px;background:#0a100d}
+.competitive-summary span{display:block;color:#7f8b84;font-size:9px;letter-spacing:.14em;font-weight:700}
+.competitive-summary strong{display:block;margin-top:8px;color:var(--ink);font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.competitive-section{margin:0 0 18px;border:1px solid var(--hairline);border-radius:20px;background:#090e0b;overflow:hidden}
+.section-heading{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 14px;border-bottom:1px solid var(--hairline)}
+.section-heading .eyebrow{margin:0 0 5px}
+.section-heading h2{margin:0;color:var(--ink);font-size:15px;letter-spacing:.03em}
+.section-heading>span{color:var(--gold-soft);font-size:16px;font-weight:800}
+.rank-row{display:grid;grid-template-columns:30px 34px 1fr auto;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid rgba(38,51,44,.7);font-size:13px}
+.rank-row:last-child{border-bottom:0}
+.rank-row.is-you{background:rgba(26,164,110,.08);box-shadow:inset 3px 0 0 var(--green-live)}
+.rank{color:#7e8a83;font-variant-numeric:tabular-nums}
+.avatar{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#15251d;color:#cbd4cd;font-size:12px;font-weight:800}
+.rank-row strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e9e5db}
+.rank-row>span:last-child{color:var(--gold-soft);font-weight:800;font-variant-numeric:tabular-nums}
+.attempt-history{padding:2px 0}
+.attempt-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 17px;border-bottom:1px solid rgba(38,51,44,.7)}
+.attempt-row:last-child{border-bottom:0}
+.attempt-row strong,.attempt-row small{display:block}
+.attempt-row strong{font-size:13px;color:#e9e5db}
+.attempt-row small{margin-top:4px;color:#7f8b84;font-size:10px}
+.attempt-row b{color:var(--gold-soft);font-size:20px;font-variant-numeric:tabular-nums}
 
 @media (max-width:760px){
   .app-shell{padding:14px 18px 30px}
@@ -110,6 +133,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   .game-topbar{gap:8px}
   .game-stat{padding:8px 10px;font-size:11px}
   .feedback{font-size:10px}
+  .competitive-summary{gap:7px}
+  .competitive-summary>div{padding:13px 11px}
+  .competitive-summary strong{font-size:24px}
+  .competitive-section{border-radius:17px}
+  .section-heading{padding:16px 14px 13px}
+  .rank-row{grid-template-columns:26px 32px 1fr auto;padding:12px 13px;gap:8px}
+  .avatar{width:32px;height:32px}
 }
 @media (max-width:390px){
   .app-shell{padding-left:14px;padding-right:14px}
