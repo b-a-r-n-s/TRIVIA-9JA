@@ -3,7 +3,6 @@
   html,body,#root{background:#030605;overflow-x:hidden}
   body{min-width:320px}
   .app-shell:not(.inner-screen){width:100%;max-width:none;min-height:100svh;padding:0 14px 12px!important;background:radial-gradient(circle at 88% 18%,rgba(17,112,75,.12),transparent 24%),radial-gradient(circle at 10% 58%,rgba(9,73,49,.08),transparent 28%),#030605!important}
-
   .app-shell:not(.inner-screen) .topbar{height:64px;padding:8px 0;border-bottom:1px solid rgba(129,151,139,.12)!important;gap:8px}
   .app-shell:not(.inner-screen) .mini-mark{flex:0 0 52px;width:52px!important;height:52px!important;border-radius:16px!important;border:1px solid #26332c!important;background:#080d0a!important;color:transparent!important;font-size:0!important;position:relative}
   .app-shell:not(.inner-screen) .mini-mark:before{content:"";position:absolute;left:15px;top:19px;width:22px;height:2px;border-radius:99px;background:#eee9df;box-shadow:0 7px 0 #eee9df,0 14px 0 #eee9df}
@@ -18,7 +17,7 @@
   .app-shell:not(.inner-screen) .topbar-actions .icon-button:before{content:"";position:absolute;left:14px;top:11px;width:13px;height:17px;border:2px solid #e9e7df;border-radius:9px 9px 5px 5px}
   .app-shell:not(.inner-screen) .topbar-actions .icon-button:after{content:"";position:absolute;left:17px;top:30px;width:8px;height:2px;border-radius:2px;background:#e9e7df}
 
-  .app-shell:not(.inner-screen) .hero{min-height:166px!important;padding:32px 10px 16px!important;margin:0!important;overflow:hidden!important}
+  .app-shell:not(.inner-screen) .hero{min-height:166px!important;height:166px!important;padding:32px 10px 16px!important;margin:0!important;overflow:hidden!important}
   .app-shell:not(.inner-screen) .hero:after{display:none}
   .app-shell:not(.inner-screen) .hero .eyebrow{font-size:8px!important;letter-spacing:.28em!important}
   .app-shell:not(.inner-screen) .hero h1{margin:8px 0 0!important;font:700 clamp(52px,16vw,78px)/.78 'Space Grotesk',sans-serif!important;letter-spacing:-.09em!important;white-space:nowrap}
@@ -60,7 +59,7 @@
   .app-shell:not(.inner-screen) .free-badge{top:10px!important;right:12px!important;padding:6px 8px!important;font-size:7px!important}
   .app-shell:not(.inner-screen) .community-card .mode-copy{padding-right:62px!important}
 
-  .app-shell:not(.inner-screen) .leaderboard-preview{height:58px!important;margin-top:10px!important;padding:8px 13px!important;border-radius:18px!important;background:#080e0b!important;border-color:#26332c!important}
+  .app-shell:not(.inner-screen) .leaderboard-preview{display:flex!important;height:58px!important;margin-top:10px!important;padding:8px 13px!important;border-radius:18px!important;background:#080e0b!important;border-color:#26332c!important}
   .app-shell:not(.inner-screen) .leaderboard-preview .bars{width:52px!important;height:31px!important;gap:4px!important;padding-right:11px!important}
   .app-shell:not(.inner-screen) .bars i{width:6px!important}
   .app-shell:not(.inner-screen) .bars i:nth-child(1){height:10px!important}.app-shell:not(.inner-screen) .bars i:nth-child(2){height:16px!important}.app-shell:not(.inner-screen) .bars i:nth-child(3){height:22px!important}.app-shell:not(.inner-screen) .bars i:nth-child(4){height:29px!important}
@@ -68,14 +67,14 @@
   .app-shell:not(.inner-screen) .leaderboard-preview .eyebrow{font-size:7px!important;letter-spacing:.2em!important}
   .app-shell:not(.inner-screen) .leaderboard-preview h3{margin:2px 0 0!important;font-size:12px!important}
   .app-shell:not(.inner-screen) .leaderboard-preview>.arrow{font-size:16px!important}
-  .app-shell:not(.inner-screen) footer{margin-top:9px!important;gap:9px!important;font-size:7px!important;letter-spacing:.22em!important}
+  .app-shell:not(.inner-screen) footer{display:flex!important;margin-top:9px!important;gap:9px!important;font-size:7px!important;letter-spacing:.22em!important}
   .app-shell:not(.inner-screen) footer i{width:28px!important}
 }
 
 @media (max-width:390px){
   .app-shell:not(.inner-screen){padding-left:11px!important;padding-right:11px!important}
   .app-shell:not(.inner-screen) .topbar-actions:before,.app-shell:not(.inner-screen) .topbar-actions:after{display:none!important}
-  .app-shell:not(.inner-screen) .hero{min-height:155px!important;padding-top:27px!important}
+  .app-shell:not(.inner-screen) .hero{min-height:155px!important;height:155px!important;padding-top:27px!important}
   .app-shell:not(.inner-screen) .hero h1{font-size:51px!important}
   .app-shell:not(.inner-screen) .mode-card{height:139px!important}
   .app-shell:not(.inner-screen) .orb{width:70px!important;height:70px!important}
