@@ -58,18 +58,32 @@
   .game-topbar { height:38px; }
   .game-brand { font-size:16px !important; }
   .game-stat { padding:7px 10px !important; font-size:10px !important; }
-  .game-progress { margin:12px 0 16px !important; height:3px !important; }
+  .game-progress { margin:12px 0 12px !important; height:3px !important; }
   .question-stage { max-width:none !important; width:100% !important; }
   .question-meta { font-size:7px !important; }
-  .question-card { margin-top:8px !important; padding:18px 15px !important; border-radius:16px !important; }
+  .quiz-host { display:grid !important; grid-template-columns:44px minmax(0,1fr) !important; gap:8px !important; max-width:none !important; margin:0 0 8px !important; min-height:0 !important; }
+  .host-avatar { width:44px !important; height:50px !important; flex-basis:44px !important; }
+  .host-head { left:8px !important; top:4px !important; width:31px !important; height:31px !important; }
+  .host-hair { width:34px !important; height:13px !important; }
+  .host-eye { top:16px !important; width:3px !important; height:3px !important; }
+  .host-eye.left { left:8px !important; }
+  .host-eye.right { right:8px !important; }
+  .host-mouth { left:12px !important; top:23px !important; width:8px !important; height:4px !important; }
+  .host-body { left:1px !important; width:41px !important; height:25px !important; }
+  .host-bubble { min-height:50px !important; padding:7px 26px 6px 10px !important; border-radius:11px !important; }
+  .host-bubble>div { gap:5px !important; }
+  .host-bubble strong { font-size:10px !important; }
+  .host-bubble small { font-size:5px !important; }
+  .host-bubble p { margin-top:3px !important; font-size:9px !important; line-height:1.2 !important; }
+  .host-bubble>i { right:8px !important; top:16px !important; font-size:12px !important; }
+  .question-card { margin-top:6px !important; padding:16px 14px !important; border-radius:15px !important; }
   .question-type { font-size:7px !important; }
-  .question-card h1 { margin-top:10px !important; font-size:24px !important; line-height:1.05 !important; }
-  .answers { gap:7px !important; margin-top:10px !important; }
-  .answer { min-height:47px !important; padding:8px 10px !important; gap:9px !important; border-radius:10px !important; font-size:11px !important; }
-  .answer>span { width:24px !important; height:24px !important; border-radius:7px !important; flex:0 0 24px; font-size:8px !important; }
-  .feedback { margin-top:8px !important; padding:9px !important; font-size:9px !important; }
-  .quiz-host { display:none !important; }
-  .hint-row,.hints { margin-top:8px !important; }
+  .question-card h1 { margin-top:9px !important; font-size:23px !important; line-height:1.05 !important; }
+  .answers { gap:6px !important; margin-top:9px !important; }
+  .answer { min-height:45px !important; padding:7px 9px !important; gap:8px !important; border-radius:9px !important; font-size:11px !important; }
+  .answer>span { width:23px !important; height:23px !important; border-radius:6px !important; flex:0 0 23px; font-size:8px !important; }
+  .feedback { margin-top:7px !important; padding:8px !important; font-size:9px !important; }
+  .hint-row,.hints { margin-top:7px !important; }
 
   .competitive-summary { grid-template-columns:repeat(3,1fr) !important; gap:6px !important; }
   .competitive-summary>div { min-height:72px !important; padding:10px 8px !important; border-radius:11px !important; }
