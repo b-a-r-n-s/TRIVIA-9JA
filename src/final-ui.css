@@ -100,6 +100,39 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .attempt-row small{margin-top:4px;color:#7f8b84;font-size:10px}
 .attempt-row b{color:var(--gold-soft);font-size:20px;font-variant-numeric:tabular-nums}
 
+/* Step 5 — quizmaster presentation */
+.quiz-host{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:12px;max-width:620px;margin:0 auto 22px;padding:0 2px;position:relative}
+.host-avatar{position:relative;width:76px;height:76px;display:grid;place-items:center;filter:drop-shadow(0 12px 20px rgba(0,0,0,.28))}
+.host-avatar:before{content:"";position:absolute;inset:4px;border-radius:24px 24px 30px 30px;background:linear-gradient(145deg,#17251f,#0b120f);border:1px solid #304239}
+.host-head{position:relative;z-index:1;width:42px;height:47px;margin-top:-10px;border-radius:48% 48% 45% 45%;background:#4b2e22;box-shadow:inset 0 -4px 0 rgba(0,0,0,.16)}
+.host-hair{position:absolute;left:3px;right:3px;top:-3px;height:16px;border-radius:14px 14px 7px 7px;background:#171311}
+.host-eye{position:absolute;top:22px;width:4px;height:4px;border-radius:50%;background:#0a0807}
+.host-eye.left{left:11px}.host-eye.right{right:11px}
+.host-mouth{position:absolute;left:15px;right:15px;bottom:9px;height:5px;border-bottom:1.5px solid #160f0c;border-radius:50%}
+.host-body{position:absolute;z-index:0;bottom:7px;width:54px;height:29px;border-radius:22px 22px 10px 10px;background:#143f31;border:1px solid #275844}
+.host-bubble{position:relative;min-height:70px;padding:13px 42px 12px 15px;border:1px solid #293b32;border-radius:15px;background:#0a110e;box-shadow:0 16px 38px rgba(0,0,0,.2);overflow:hidden}
+.host-bubble:before{content:"";position:absolute;left:-7px;top:28px;width:13px;height:13px;transform:rotate(45deg);background:#0a110e;border-left:1px solid #293b32;border-bottom:1px solid #293b32}
+.host-bubble>div{display:flex;align-items:baseline;gap:8px}
+.host-bubble strong{color:#f0ece2;font-size:12px;letter-spacing:.02em}
+.host-bubble small{color:#718078;font-size:8px;letter-spacing:.14em;font-weight:800}
+.host-bubble p{margin:7px 0 0;color:#b9c0ba;font-size:12px;line-height:1.45}
+.host-bubble i{position:absolute;right:13px;top:12px;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;font-style:normal;font-size:11px;font-weight:900;color:#d9e5dd;background:#12241b;border:1px solid #2d4a3c}
+.host-correct .host-avatar:before{border-color:#347b5d;background:#0d241a}
+.host-correct .host-body{background:#185f42;border-color:#2e8d65}
+.host-correct .host-bubble i{color:#8be1b7;background:#0c291c;border-color:#2f7958}
+.host-wrong .host-avatar:before{border-color:#76504a}
+.host-wrong .host-bubble i{color:#e6a49a;background:#2a1512;border-color:#74463f}
+.host-urgent .host-avatar:before{border-color:#8b7041}
+.host-urgent .host-bubble i{color:#f0ce83;background:#292010;border-color:#725d34}
+.host-finish .host-avatar:before{border-color:#80683c}
+.host-finish .host-bubble i{color:#e5c678;background:#211b0e;border-color:#69582f}
+.host-correct .host-head{animation:host-nod .35s ease both}
+.host-wrong .host-head{animation:host-shake .28s ease both}
+.host-urgent .host-avatar{animation:host-pulse 1s ease-in-out infinite}
+@keyframes host-nod{0%{transform:translateY(0)}45%{transform:translateY(3px)}100%{transform:translateY(0)}}
+@keyframes host-shake{0%,100%{transform:translateX(0)}35%{transform:translateX(-2px)}70%{transform:translateX(2px)}}
+@keyframes host-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+
 @media (max-width:760px){
   .app-shell{padding:14px 18px 30px}
   .hero{min-height:330px;padding:92px 0 36px}
@@ -140,6 +173,21 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   .section-heading{padding:16px 14px 13px}
   .rank-row{grid-template-columns:26px 32px 1fr auto;padding:12px 13px;gap:8px}
   .avatar{width:32px;height:32px}
+  .quiz-host{grid-template-columns:58px minmax(0,1fr);gap:9px;margin-bottom:18px}
+  .host-avatar{width:58px;height:58px}
+  .host-avatar:before{inset:3px;border-radius:18px 18px 23px 23px}
+  .host-head{width:33px;height:37px;margin-top:-7px}
+  .host-hair{height:12px;top:-2px}
+  .host-eye{top:17px;width:3px;height:3px}
+  .host-eye.left{left:8px}.host-eye.right{right:8px}
+  .host-mouth{left:11px;right:11px;bottom:7px}
+  .host-body{width:42px;height:23px;bottom:5px}
+  .host-bubble{min-height:62px;padding:11px 34px 10px 12px;border-radius:13px}
+  .host-bubble:before{top:23px}
+  .host-bubble strong{font-size:10px}
+  .host-bubble small{font-size:7px}
+  .host-bubble p{font-size:10px;margin-top:5px}
+  .host-bubble i{right:9px;top:9px;width:19px;height:19px;font-size:9px}
 }
 @media (max-width:390px){
   .app-shell{padding-left:14px;padding-right:14px}
@@ -157,6 +205,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   .game-shell{padding-left:12px;padding-right:12px}
   .question-card{padding:23px 16px}
   .answer{min-height:54px;gap:10px}
+  .quiz-host{grid-template-columns:50px minmax(0,1fr);gap:7px}
+  .host-avatar{width:50px;height:50px}
+  .host-bubble{padding-right:31px}
+  .host-bubble p{font-size:9.5px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
