@@ -47,12 +47,20 @@ export default function FriendMode({language,onBack}:{language:Language;onBack:(
 
   const reset=()=>{setChallenge(null);setQuestion(null);setPosition(1);setScore(0);setOtherScore(0);setRemaining(90);setSelected(null);setCorrect(null);setWinner(null);setFinished(false);setError('');setCode('');window.history.replaceState({},'',window.location.pathname);setView('menu')}
 
+  const enterGame=async(c:Challenge)=>{
+    setChallenge(c)
+    setRemaining(Math.max(0,Math.ceil((Date.parse(c.expires_at||'')-Date.now())/1000)))
+    setPosition(1)
+    setFinished(false)
+    setView('game')
+    await loadQuestion(c.id,1)
+  }
+
   const startGame=async(c:Challenge)=>{
     setBusy(true);setError('')
     try{
       const data=await call<{challenge:Challenge}>('start_friend_challenge',{challenge_id:c.id})
-      setChallenge(data.challenge);setRemaining(Math.max(0,Math.ceil((Date.parse(data.challenge.expires_at||'')-Date.now())/1000)));setPosition(1);setFinished(false);setView('game')
-      await loadQuestion(data.challenge.id,1)
+      await enterGame(data.challenge)
     }catch(e){setError(e instanceof Error?e.message:'Could not start challenge.')}finally{setBusy(false)}
   }
 
@@ -124,7 +132,7 @@ export default function FriendMode({language,onBack}:{language:Language;onBack:(
         const {data}=await supabase.from('friend_challenges').select('id,creator_id,opponent_id,language,duration_seconds,status,started_at,expires_at').eq('id',challenge.id).maybeSingle()
         if(!data)return
         setChallenge(data as Challenge)
-        if(data.status==='active')void startGame(data as Challenge)
+        if(data.status==='active')void enterGame(data as Challenge)
       }catch{}
     }
     const t=window.setInterval(poll,1000);void poll();return()=>window.clearInterval(t)
