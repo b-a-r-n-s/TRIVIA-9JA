@@ -1,0 +1,104 @@
+/* TRIVIA 9JA — strict mobile frame
+   Reference target: one viewport, no page scrolling for the primary game screens. */
+@media (max-width: 760px) {
+  :root { --mobile-pad: 28px; }
+  html, body, #root { width:100%; height:100%; min-height:100%; overflow:hidden; }
+  body { overscroll-behavior:none; }
+  button { -webkit-tap-highlight-color:transparent; }
+
+  .app-shell { width:100%; height:100dvh; min-height:0 !important; max-height:100dvh; padding:0 var(--mobile-pad) !important; margin:0; overflow:hidden !important; background:#050806; }
+
+  .app-shell:not(.inner-screen) .topbar { height:54px; flex:none; }
+  .mini-mark { width:38px; height:38px; }
+  .topbar-actions { gap:7px; }
+  .topbar-actions .status-dot, .topbar-actions > span:not(.coin-pill) { display:none; }
+  .icon-button { width:36px; height:36px; }
+
+  .hero { min-height:0 !important; height:30dvh; max-height:280px; padding:44px 0 0 !important; display:flex; flex-direction:column; justify-content:flex-start; }
+  .hero h1 { margin-top:10px !important; font-size:clamp(54px,15vw,82px) !important; line-height:.82 !important; letter-spacing:-.09em !important; white-space:nowrap; }
+  .tagline { margin-top:18px !important; font-size:13px !important; max-width:300px !important; }
+  .gold-line { margin-top:17px !important; }
+  .hero-pattern { right:-10px !important; top:32px !important; width:150px !important; height:170px !important; opacity:.12 !important; }
+  .pattern { display:none !important; }
+
+  .language-section { margin:0 0 12px !important; }
+  .language-control { margin-top:8px !important; height:50px; border-radius:15px !important; }
+  .language { min-height:44px !important; font-size:11px !important; }
+
+  .modes { display:grid !important; grid-template-columns:1fr !important; gap:10px !important; height:auto; }
+  .mode-card { min-height:0 !important; height:calc((100dvh - 54px - 30dvh - 92px - 20px) / 2) !important; max-height:250px; padding:17px !important; border-radius:18px !important; }
+  .solo-card { grid-template-columns:92px 1fr !important; column-gap:15px !important; }
+  .community-card { grid-template-columns:1fr !important; }
+  .mode-topline { font-size:8px !important; }
+  .mode-visual { min-height:0 !important; }
+  .orb { width:82px !important; height:82px !important; box-shadow:0 0 0 7px rgba(5,36,25,.3) !important; }
+  .orb svg { width:52px !important; height:52px !important; }
+  .orb.gold { width:64px !important; height:64px !important; }
+  .orb.gold svg { width:38px !important; height:38px !important; }
+  .mode-copy h2, .mode-card h2 { font-size:25px !important; line-height:.94 !important; margin-bottom:7px !important; }
+  .mode-copy p, .mode-card p { font-size:10px !important; line-height:1.4 !important; }
+  .mode-meta { margin-top:10px !important; gap:7px 12px !important; font-size:7px !important; }
+  .primary-action,.secondary-action { min-height:38px !important; margin-top:10px !important; padding:0 12px !important; font-size:8px !important; border-radius:9px !important; }
+  .leaderboard-preview, .app-shell:not(.inner-screen) footer { display:none !important; }
+
+  .inner-screen { width:100%; height:100dvh; min-height:0 !important; max-height:100dvh; padding:0 var(--mobile-pad) !important; overflow:hidden !important; }
+  .inner-header { height:72px; min-height:72px; margin:0 !important; padding:12px 0 10px !important; gap:12px !important; }
+  .inner-header>button,.back-button { width:40px !important; height:40px !important; flex:0 0 40px; }
+  .inner-header h1 { font-size:28px !important; line-height:.98 !important; }
+  .inner-header .coin-pill { padding:8px 10px !important; font-size:10px !important; }
+  .eyebrow,.section-label { font-size:7px !important; letter-spacing:.18em !important; }
+
+  .levels-grid { height:calc(100dvh - 90px); grid-template-columns:repeat(2,1fr) !important; gap:8px !important; overflow:hidden; }
+  .level-tile { min-height:0 !important; height:calc((100% - 32px)/5) !important; padding:11px !important; grid-template-columns:32px 1fr !important; gap:3px 8px !important; border-radius:12px !important; }
+  .level-tile span { font-size:12px !important; }
+  .level-tile strong { font-size:11px !important; }
+  .level-tile small { font-size:6px !important; }
+
+  .game-shell { width:100%; height:100dvh; min-height:0 !important; max-height:100dvh; padding:12px var(--mobile-pad) !important; overflow:hidden !important; }
+  .game-topbar { height:38px; }
+  .game-brand { font-size:16px !important; }
+  .game-stat { padding:7px 10px !important; font-size:10px !important; }
+  .game-progress { margin:12px 0 16px !important; height:3px !important; }
+  .question-stage { max-width:none !important; width:100% !important; }
+  .question-meta { font-size:7px !important; }
+  .question-card { margin-top:8px !important; padding:18px 15px !important; border-radius:16px !important; }
+  .question-type { font-size:7px !important; }
+  .question-card h1 { margin-top:10px !important; font-size:24px !important; line-height:1.05 !important; }
+  .answers { gap:7px !important; margin-top:10px !important; }
+  .answer { min-height:47px !important; padding:8px 10px !important; gap:9px !important; border-radius:10px !important; font-size:11px !important; }
+  .answer>span { width:24px !important; height:24px !important; border-radius:7px !important; flex:0 0 24px; font-size:8px !important; }
+  .feedback { margin-top:8px !important; padding:9px !important; font-size:9px !important; }
+  .quiz-host { display:none !important; }
+  .hint-row,.hints { margin-top:8px !important; }
+
+  .competitive-summary { grid-template-columns:repeat(3,1fr) !important; gap:6px !important; }
+  .competitive-summary>div { min-height:72px !important; padding:10px 8px !important; border-radius:11px !important; }
+  .competitive-summary strong { font-size:20px !important; }
+  .competitive-summary span { font-size:6px !important; }
+  .competitive-section { border-radius:14px !important; }
+  .rank-row { grid-template-columns:26px 30px 1fr auto !important; gap:7px !important; padding:10px 11px !important; }
+  .rank-row strong { font-size:10px !important; }
+  .rank-row>span:last-child { font-size:9px !important; }
+  .avatar { width:27px !important; height:27px !important; font-size:9px !important; }
+
+  .inner-screen .modes { height:calc(100dvh - 82px); grid-template-rows:1fr 1fr 1fr !important; }
+  .inner-screen .modes .mode-card { height:auto !important; max-height:none !important; }
+  .inner-screen .modes .mode-card .mode-copy h2 { font-size:24px !important; }
+  .inner-screen .modes .mode-card .mode-copy p { font-size:10px !important; }
+  .auth-backdrop { padding:14px !important; }
+  .auth-card { max-height:calc(100dvh - 28px) !important; padding:18px !important; border-radius:16px !important; }
+  .auth-card h2 { font-size:27px !important; }
+  .auth-card .primary-action,.auth-card .secondary-action { min-height:42px !important; }
+  .auth-message { max-height:38px; overflow:hidden; margin:6px 0 !important; padding:8px 10px !important; border-radius:8px !important; font-size:9px !important; }
+}
+
+@media (max-width:380px) {
+  :root { --mobile-pad:20px; }
+  .hero { height:28dvh; padding-top:36px !important; }
+  .hero h1 { font-size:51px !important; }
+  .mode-card { max-height:220px; }
+  .mode-card h2 { font-size:22px !important; }
+  .mode-copy p { font-size:9px !important; }
+  .inner-header h1 { font-size:25px !important; }
+  .question-card h1 { font-size:21px !important; }
+}
