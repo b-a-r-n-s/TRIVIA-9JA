@@ -151,9 +151,13 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
  box-shadow:0 18px 42px rgba(0,0,0,.25),0 0 28px rgba(16,185,129,.035);
 }
 .mode-card:before{
- content:"";position:absolute;inset:-55%;
- background:conic-gradient(from 0deg,transparent 0 55%,rgba(16,185,129,.18) 68%,rgba(16,185,129,.95) 84%,rgba(52,211,153,1) 91%,transparent 100%);
- animation:borderSpin 4.2s linear infinite;z-index:1;opacity:1;filter:drop-shadow(0 0 7px rgba(16,185,129,.28));
+ content:"";position:absolute;inset:0;padding:2px;border-radius:inherit;
+ background:conic-gradient(from -35deg,transparent 0 72%,rgba(16,185,129,.08) 78%,rgba(16,185,129,.55) 84%,rgba(52,211,153,1) 88%,rgba(16,185,129,.28) 92%,transparent 98%);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+ -webkit-mask-composite:xor;
+ mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+ mask-composite:exclude;
+ animation:borderSpin 3.8s linear infinite;z-index:1;filter:drop-shadow(0 0 6px rgba(16,185,129,.42));pointer-events:none;
 }
 .mode-card:after{content:"";position:absolute;inset:2px;border-radius:23px;background:#06110b;z-index:0}
 .mode-card.gold{border-color:rgba(245,158,11,.36);box-shadow:0 18px 42px rgba(0,0,0,.25),0 0 28px rgba(245,158,11,.035)}
