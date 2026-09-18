@@ -1,74 +1,290 @@
-import { useCallback, useEffect, useState } from 'react'
-import { supabase, ensureGuestSession } from './lib/supabase'
-import ProfilePanel from './components/ProfilePanel'
-import FriendMode from './FriendMode'
+import { useState } from 'react'
 
-const languages = [{ code:'en',label:'English',short:'EN'},{code:'ha',label:'Hausa',short:'HA'},{code:'yo',label:'Yorùbá',short:'YO'},{code:'ig',label:'Igbo',short:'IG'}] as const
-type Language=(typeof languages)[number]['code']
-type Screen='home'|'levels'|'solo'|'community'|'leaderboard'|'friend'
-type Question={id:string;prompt:string;options:string[];type:'multiple_choice'|'riddle'|'scramble';metadata?:Record<string,unknown>}
-type GameMode='solo'|'community'
-type HostState='intro'|'idle'|'correct'|'wrong'|'thinking'|'urgent'|'finish'
-type CommunityFinal={score:number;answered_count:number;rank:number;total_players:number}
-type HintState={eliminate:string|null;clue:string|null;usedEliminate:boolean;usedClue:boolean}
-type CompetitiveStats={community:Array<{user_id:string;language:Language;score:number;created_at:string;display_name?:string|null;username?:string|null}>;my_attempts:Array<{language:Language;score:number;answered_count:number;question_count:number;status:string;created_at:string}>;friend:{played:number;wins:number;losses:number;draws:number;best_score:number}}
+type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
+type View = 'home' | 'solo' | 'community' | 'leaderboard' | 'profile' | 'settings'
 
-const hostLines:Record<Language,{name:string;role:string;intro:string[];correct:string[];wrong:string[];thinking:string[];urgent:string[];finish:string[]}>= {
- en:{name:'Mr. Jasper',role:'QUIZMASTER',intro:['Alright, let’s see what you’ve got.','Your question is up. Stay sharp.'],correct:['Correct. Keep it moving.','That one enter!','You sabi this one.'],wrong:['Not quite. No wahala, next one.','Ah-ah. That one nearly catch you.'],thinking:['Take your time.','Easy. Think it through.'],urgent:['Time dey go. Make your move.','No overthink am now.'],finish:['That’s the round. Let’s see how you did.']},
- ha:{name:'Mr. Ahmed',role:'MAI TAMBAYA',intro:['Mu ga abin da ka sani.','Ga tambayarka. Ka mai da hankali.'],correct:['Daidai ne. Ka ci gaba.','Madalla. Wannan daidai ne.'],wrong:['Ba haka ba. Mu ci gaba.','Kusan. Ka sake mai da hankali.'],thinking:['Ka yi tunani a hankali.','Kada ka yi gaggawa.'],urgent:['Lokaci na tafiya. Ka zabi yanzu.'],finish:['Wannan shi ne karshen zagayen.']},
- yo:{name:'Miss Temi',role:'ALÁGBÀ ÌBÈRÈ',intro:['Jẹ́ ká rí ohun tí o mọ̀.','Ìbéèrè rẹ ti dé. Má ṣe yara.'],correct:['Dáadáa. Ìdáhùn tó tọ́ ni.','O tọ́. Má ṣe dúró.'],wrong:['Kò tó bẹ́ẹ̀. A máa lọ síwájú.','Ó sún mọ́ ọn. Ronú dáadáa.'],thinking:['Rò ó dáadáa.','Má ṣe yara.'],urgent:['Àkókò ń lọ. Yàn báyìí.'],finish:['Ìyẹn ni ìparí. Jẹ́ ká wo àbájáde rẹ.']},
- ig:{name:'Miss Chiamaka',role:'ONYE NDU AJỤJỤ',intro:['Ka anyị hụ ihe ị maara.','Ajụjụ gị abịala. Lezie anya.'],correct:['Ọ dị mma. Azịza ziri ezi.','Ziri ezi. Gaa n’ihu.'],wrong:['Ọ bụghị nke ahụ. Ka anyị gaa n’ihu.','Ọ fọrọ nke nta. Chee echiche ọzọ.'],thinking:['Chee echiche nke ọma.','Egbula ọsọ.'],urgent:['Oge na-aga. Họrọ ugbu a.'],finish:['Nke ahụ bụ njedebe.']}
+const languages: Language[] = ['English', 'Hausa', 'Yorùbá', 'Igbo']
+
+const hosts: Record<Language, {
+  name: string
+  title: string
+  image: string
+  location: string
+  catchphrase: string
+}> = {
+  English: {
+    name: 'Mr. Jasper',
+    title: 'Official Host & National Trivia Director',
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop',
+    location: 'Lagos, Nigeria',
+    catchphrase: 'Sharp-sharp! Prove to Nigeria say your head sharp!',
+  },
+  Hausa: {
+    name: 'Mr. Ahmed',
+    title: 'Kano Wisdom Scholar & TV Host',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop',
+    location: 'Kano, Nigeria',
+    catchphrase: 'Sannu ku da zuwa! Sani shine karfi!',
+  },
+  Yorùbá: {
+    name: 'Miss Temi',
+    title: 'Ibadan Glamour & Culture Anchor',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop',
+    location: 'Ibadan, Nigeria',
+    catchphrase: 'Ẹ káàbọ̀ o! Ọpọlọ pẹpẹ l’ọ̀rọ̀ yìí!',
+  },
+  Igbo: {
+    name: 'Miss Chiamaka',
+    title: 'Coal City Royal Intellect Anchor',
+    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop',
+    location: 'Enugu, Nigeria',
+    catchphrase: 'Ndewonu! Amamihe na-enye ohere!',
+  },
 }
 
-function BrainIcon(){return <svg viewBox="0 0 64 64"><path d="M31 12c-7-6-17-1-16 7-7 1-9 10-4 14-5 6 0 14 7 13 1 8 12 9 16 3M33 12c7-6 17-1 16 7 7 1 9 10 4 14 5 6 0 14-7 13-1 8-12 9-16 3M31 12v37M22 21c4 0 7 3 7 7M42 21c-4 0-7 3-7 7M18 37c5 0 8-2 10-5M46 37c-5 0-8-2-10-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>}
-function TrophyIcon(){return <svg viewBox="0 0 64 64"><path d="M21 11h22v17c0 8-5 14-11 14s-11-6-11-14V11Z" fill="none" stroke="currentColor" strokeWidth="2.4"/><path d="M21 17H12v5c0 8 5 12 11 12M43 17h9v5c0 8-5 12-11 12M32 42v10M23 54h18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>}
-const Arrow=()=> <span className="arrow">→</span>
+const navItems = [
+  ['home', 'Home'],
+  ['leaderboard', 'Leaderboard'],
+  ['profile', 'Profile'],
+  ['settings', 'Settings'],
+] as const
 
-function Host({language,state}:{language:Language;state:HostState}){
- const host=hostLines[language]; const [line,setLine]=useState(host.intro[0]);
- useEffect(()=>{const pool=state==='correct'?host.correct:state==='wrong'?host.wrong:state==='thinking'?host.thinking:state==='urgent'?host.urgent:state==='finish'?host.finish:host.intro;setLine(pool[Math.floor(Math.random()*pool.length)])},[state,language,host]);
- const mood=state==='correct'?'✓':state==='wrong'||state==='urgent'?'!':'?';
- return <div className={`quiz-host host-${state}`} aria-live="polite"><div className="host-avatar"><div className="host-head"><span className="host-hair"/><span className="host-eye left"/><span className="host-eye right"/><span className="host-mouth"/></div><span className="host-body"/></div><div className="host-bubble"><div><strong>{host.name}</strong><small>{host.role}</small></div><p>{line}</p><i>{mood}</i></div></div>
+function Icon({ name }: { name: string }) {
+  const paths: Record<string, JSX.Element> = {
+    menu: <><path d="M4 7h16M4 12h16M4 17h16"/></>,
+    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></>,
+    moon: <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z"/>,
+    brain: <><path d="M9 4.5A3.5 3.5 0 0 0 5.5 8c0 .5.1 1 .3 1.4A3.5 3.5 0 0 0 7 16a3.5 3.5 0 0 0 6 2.5V5a3.5 3.5 0 0 0-4-0.5Z"/><path d="M15 4.5A3.5 3.5 0 0 1 18.5 8c0 .5-.1 1-.3 1.4A3.5 3.5 0 0 1 17 16a3.5 3.5 0 0 1-6 2.5V5a3.5 3.5 0 0 1 4-.5Z"/><path d="M9 8h2M13 8h2M8 12h3M13 13h3"/></>,
+    trophy: <><path d="M7 4h10v6a5 5 0 0 1-10 0V4Z"/><path d="M7 6H3v2a5 5 0 0 0 5 5M17 6h4v2a5 5 0 0 1-5 5M12 15v5M8 20h8"/></>,
+    globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.2 2.5 3.3 5.5 3.3 9S14.2 18.5 12 21c-2.2-2.5-3.3-5.5-3.3-9S9.8 5.5 12 3Z"/></>,
+    arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
+    x: <><path d="m6 6 12 12M18 6 6 18"/></>,
+    user: <><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></>,
+    chart: <><path d="M4 19V5M4 19h16"/><path d="M7 15v-4M11 15V7M15 15v-7M19 15V4"/></>,
+    zap: <path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z"/>,
+  }
+  return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
 
-async function invoke<T>(name:string, body:Record<string,unknown>):Promise<T>{await ensureGuestSession();const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Could not create a player session.');const {data,error}=await supabase.functions.invoke(name,{body,headers:{Authorization:`Bearer ${session.access_token}`}});if(error)throw error;return data as T}
+function HostCard({ language, reaction = 'idle' }: { language: Language; reaction?: 'idle' | 'correct' | 'wrong' }) {
+  const host = hosts[language]
+  const badge = reaction === 'correct'
+    ? '🔥 IMPRESSED!'
+    : reaction === 'wrong'
+      ? '😬 OUCH! FALL HAND!'
+      : 'LIVE HOST'
 
-function App(){
- const [screen,setScreen]=useState<Screen>('home'); const [language,setLanguage]=useState<Language>('en'); const [signedIn,setSignedIn]=useState(false); const [anonymous,setAnonymous]=useState(false); const [menuOpen,setMenuOpen]=useState(false); const [profileOpen,setProfileOpen]=useState(false); const [authMode,setAuthMode]=useState<'signin'|'signup'|null>(null); const [coins,setCoins]=useState(0);
- const [level,setLevel]=useState(1); const [questions,setQuestions]=useState<Question[]>([]); const [index,setIndex]=useState(0); const [selected,setSelected]=useState<string|null>(null); const [result,setResult]=useState<{correct:boolean;answer:unknown;explanation:string|null}|null>(null); const [loading,setLoading]=useState(false); const [error,setError]=useState(''); const [soloScore,setSoloScore]=useState(0);
- const [communityAttempt,setCommunityAttempt]=useState<{id:string;expires_at:string;score:number;answered_count:number}|null>(null); const [communityRemaining,setCommunityRemaining]=useState(180); const [communityScore,setCommunityScore]=useState(0); const [communityFinal,setCommunityFinal]=useState<CommunityFinal|null>(null); const [finished,setFinished]=useState(false);
- const [leaderboard,setLeaderboard]=useState<Array<{rank:number;user_id:string;display_name:string|null;username:string|null;score:number;created_at:string}>>([]); const [leaderboardLoading,setLeaderboardLoading]=useState(false); const [competitive,setCompetitive]=useState<CompetitiveStats|null>(null); const [competitiveLoading,setCompetitiveLoading]=useState(false);
- const [hintLoading,setHintLoading]=useState(false); const [hint,setHint]=useState<HintState>({eliminate:null,clue:null,usedEliminate:false,usedClue:false});
- const q=questions[index];
- useEffect(()=>{let active=true;supabase.auth.getSession().then(({data})=>{if(active&&data.session){setSignedIn(true);setAnonymous(Boolean(data.session.user.is_anonymous))}});ensureGuestSession().then(async()=>{if(!active)return;const {data}=await supabase.auth.getUser();setSignedIn(Boolean(data.user));setAnonymous(Boolean(data.user?.is_anonymous))}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Guest mode is unavailable right now.')});const {data:l}=supabase.auth.onAuthStateChange((_e,s)=>{setSignedIn(Boolean(s));setAnonymous(Boolean(s?.user.is_anonymous))});return()=>{active=false;l.subscription.unsubscribe()}},[])
- useEffect(()=>{if(!signedIn)return;supabase.from('player_progress').select('coins,current_level').maybeSingle().then(({data})=>{if(data){setCoins(data.coins||0);setLevel(Math.max(1,Math.min(10,data.current_level||1)))}})},[signedIn])
- const finishCommunity=useCallback(async()=>{if(!communityAttempt||communityFinal)return;try{const data=await invoke<CommunityFinal>('finish_community_attempt',{attempt_id:communityAttempt.id});setCommunityFinal(data);setCommunityScore(data.score);setFinished(true)}catch(e){const message=e instanceof Error?e.message:'Could not finish Community Challenge.';if(/still active/i.test(message)){window.setTimeout(()=>{void finishCommunity()},300)}else{setError(message);setFinished(true)}}},[communityAttempt,communityFinal])
- const finishSolo=useCallback(async()=>{try{const data=await invoke<{completed:boolean;new_current_level:number;score:number}>('finish_solo_level',{language,level});setSoloScore(data.score);setLevel(Math.max(1,Math.min(10,data.new_current_level||level)));setFinished(true)}catch(e){const message=e instanceof Error?e.message:'Could not finish level.';if(/not complete/i.test(message)){window.setTimeout(()=>{void finishSolo()},500)}else{setError(message);setFinished(true)}}},[language,level])
- useEffect(()=>{if(screen!=='community'||!communityAttempt||finished)return;const tick=()=>{const left=Math.max(0,Math.ceil((new Date(communityAttempt.expires_at).getTime()-Date.now())/1000));setCommunityRemaining(left);if(left<=0)void finishCommunity()};tick();const timer=window.setInterval(tick,200);return()=>window.clearInterval(timer)},[screen,communityAttempt,finished,finishCommunity])
- useEffect(()=>{if(screen!=='leaderboard'){return}if(!signedIn){setLeaderboard([]);setCompetitive(null);return}let cancelled=false;setLeaderboardLoading(true);setCompetitiveLoading(true);Promise.all([invoke<{entries:Array<{rank:number;user_id:string;display_name:string|null;username:string|null;score:number;created_at:string}>}>('get_community_leaderboard',{language,limit:50}),invoke<CompetitiveStats>('get_competitive_stats',{})]).then(([board,stats])=>{if(!cancelled){setLeaderboard(board.entries||[]);setCompetitive(stats)}}).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:'Could not load competitive data.')}).finally(()=>{if(!cancelled){setLeaderboardLoading(false);setCompetitiveLoading(false)}});return()=>{cancelled=true}},[screen,language,signedIn])
- const resetGame=()=>{setQuestions([]);setIndex(0);setSelected(null);setResult(null);setError('');setFinished(false);setSoloScore(0);setCommunityAttempt(null);setCommunityRemaining(180);setCommunityScore(0);setCommunityFinal(null);setHint({eliminate:null,clue:null,usedEliminate:false,usedClue:false})}
- const loadQuestions=useCallback(async(mode:GameMode,requestedLevel:number,attemptId?:string)=>{setLoading(true);setError('');setHint({eliminate:null,clue:null,usedEliminate:false,usedClue:false});try{const data=await invoke<{questions:Question[];exhausted:boolean}>('get_next_questions',{mode,language,level:mode==='solo'?requestedLevel:null,limit:mode==='solo'?10:30});if(data.exhausted||!data.questions.length){setQuestions([]);if(mode==='community'&&attemptId){await invoke<CommunityFinal>('finish_community_attempt',{attempt_id:attemptId}).then(final=>{setCommunityFinal(final);setCommunityScore(final.score);setFinished(true)}).catch(e=>{const message=e instanceof Error?e.message:'Could not finish Community Challenge.';if(/still active/i.test(message)){window.setTimeout(()=>{void finishCommunity()},300)}else{setError(message);setFinished(true)}})}else{setError('You’ve answered every question here — more coming soon!')}return}setQuestions(data.questions);setIndex(0)}catch(e){const message=e instanceof Error?e.message:'Could not load questions.';setError(message);if(mode==='community'&&attemptId){setFinished(true)}}finally{setLoading(false)}},[language,finishCommunity])
- const startSolo=async(selectedLevel:number)=>{resetGame();setLevel(selectedLevel);setScreen('solo');await loadQuestions('solo',selectedLevel)}
- const startCommunity=async()=>{resetGame();setScreen('community');setLoading(true);try{const data=await invoke<{attempt:{id:string;expires_at:string;score:number;answered_count:number}}>('start_community_attempt',{language});setCommunityAttempt(data.attempt);setCommunityRemaining(180);await loadQuestions('community',0,data.attempt.id)}catch(e){setError(e instanceof Error?e.message:'Could not start Community Challenge.')}finally{setLoading(false)}}
- const useHint=async(type:'eliminate'|'clue')=>{if(!q||selected||loading||finished||hintLoading)return;if(type==='eliminate'&&hint.usedEliminate)return;if(type==='clue'&&hint.usedClue)return;setHintLoading(true);setError('');try{const data=await invoke<{hint_type:string;cost:number;coins_remaining:number;eliminated_option:string|null;clue:string|null}>('use_hint',{question_id:q.id,mode:screen==='solo'?'solo':'community',level:screen==='solo'?level:null,attempt_id:communityAttempt?.id,hint_type:type,idempotency_key:crypto.randomUUID()});setHint(v=>({...v,eliminate:data.eliminated_option??v.eliminate,clue:data.clue??v.clue,usedEliminate:type==='eliminate'?true:v.usedEliminate,usedClue:type==='clue'?true:v.usedClue}));setCoins(data.coins_remaining)}catch(e){setError(e instanceof Error?e.message:'Hint could not be used.')}finally{setHintLoading(false)}}
- const answer=async(option:string)=>{if(!q||selected||loading||finished)return;setSelected(option);setLoading(true);try{const data=await invoke<{correct:boolean;correct_answer:unknown;explanation:string|null;coins_awarded:number}>('submit_answer',{question_id:q.id,mode:screen==='solo'?'solo':'community',level:screen==='solo'?level:null,attempt_id:communityAttempt?.id,answer:option,idempotency_key:crypto.randomUUID()});setResult({correct:data.correct,answer:data.correct_answer,explanation:data.explanation});if(screen==='solo'&&data.correct){setSoloScore(v=>v+(q.type==='scramble'?2:1));setCoins(v=>v+(data.coins_awarded??0))}}catch(e){setResult(null);setSelected(null);setError(e instanceof Error?e.message:'Answer could not be submitted.')}finally{setLoading(false)}}
- useEffect(()=>{if(!selected||!result)return;const delay=result.correct?650:1150;const timer=window.setTimeout(()=>{setSelected(null);setResult(null);setHint({eliminate:null,clue:null,usedEliminate:false,usedClue:false});if(screen==='solo'){if(index>=questions.length-1)void finishSolo();else setIndex(v=>v+1)}else{if(communityRemaining<=0)void finishCommunity();else if(index>=questions.length-1&&communityAttempt)void loadQuestions('community',0,communityAttempt.id);else setIndex(v=>v+1)}},delay);return()=>window.clearTimeout(timer)},[selected,result,screen,index,questions.length,communityRemaining,loadQuestions,finishCommunity,finishSolo,communityAttempt])
- const home=()=>{resetGame();setScreen('home');setMenuOpen(false)}
- const authSubmit=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const fd=new FormData(e.currentTarget);const email=String(fd.get('email'));const password=String(fd.get('password'));setError('');const res=authMode==='signup'?await supabase.auth.signUp({email,password}):await supabase.auth.signInWithPassword({email,password});if(res.error)setError(res.error.message);else{setAuthMode(null);setSignedIn(true);setAnonymous(false)}}
- if(screen==='friend')return signedIn?<FriendMode language={language} onBack={home}/>:<main className="app-shell inner-screen"><header className="inner-header"><button onClick={home}>←</button><div><p className="eyebrow">FRIEND MODE</p><h1>Loading player.</h1></div></header><section className="question-card" style={{textAlign:'center'}}><p>Preparing your player session…</p></section></main>
- if(screen==='solo'||screen==='community'){
-  const community=screen==='community';const correct=result?.correct===true;const hostState:HostState=!selected?'thinking':correct?'correct':'wrong';
-  if(finished)return <main className="app-shell inner-screen"><header className="inner-header"><button onClick={home}>←</button><div><p className="eyebrow">{community?'COMMUNITY CHALLENGE':`LEVEL ${level}`}</p><h1>{community?'Time. That’s your score.':'Level complete.'}</h1></div></header><section className="question-card" style={{textAlign:'center'}}><p className="section-label">FINAL SCORE</p><h1 style={{fontSize:64,margin:'12px 0'}}>{community?(communityFinal?.score??communityScore):soloScore}</h1>{community&&communityFinal&&<><p>{communityFinal.answered_count} answered · Rank #{communityFinal.rank} of {communityFinal.total_players}</p><p className="section-label" style={{marginTop:24}}>ALL-TIME LEADERBOARD</p><button className="secondary-action" onClick={()=>setScreen('leaderboard')}>VIEW LEADERBOARD <Arrow/></button></>}<p>{community?'Correct answers in 3 minutes.':'You completed this level without wasting a second.'}</p><button className="primary-action" onClick={home}>BACK TO HOME <Arrow/></button></section></main>
-  return <main className="game-shell"><header className="game-topbar"><button className="back-button" onClick={home}>←</button><div className="game-brand">TRIVIA <b>9JA</b></div><div className="game-stat">{community?`${Math.floor(communityRemaining/60)}:${String(communityRemaining%60).padStart(2,'0')}`:`◉ ${coins}`}</div></header><div className="game-progress"><span style={{width:community?`${(communityRemaining/180)*100}%`:`${((index+1)/Math.max(questions.length,10))*100}%`}}/></div><Host language={language} state={hostState}/>{error&&<p className="auth-message">{error}</p>}{loading&&!q?<p className="auth-message">Loading your questions…</p>:q&&<section className="question-stage"><div className="question-meta"><span>{community?'COMMUNITY CHALLENGE':`LEVEL ${level} · QUESTION ${index+1}/10`}</span><span>{languages.find(x=>x.code===language)?.label}</span></div><div className="question-card"><span className="question-type">{q.type==='riddle'?'BRAIN TEASER':q.type==='scramble'?'LETTER SCRAMBLE':'NIGERIAN TRIVIA'}</span><h1>{q.prompt}</h1></div><div className="hint-tools"><button className={`hint-button ${hint.usedEliminate?'used':''}`} disabled={Boolean(selected)||loading||finished||hintLoading||hint.usedEliminate||coins<1} onClick={()=>useHint('eliminate')}><span>−</span><strong>ELIMINATE</strong><small>1 COIN</small></button><button className={`hint-button ${hint.usedClue?'used':''}`} disabled={Boolean(selected)||loading||finished||hintLoading||hint.usedClue||coins<2} onClick={()=>useHint('clue')}><span>?</span><strong>CLUE</strong><small>2 COINS</small></button></div>{hint.clue&&<div className="hint-panel"><span>CLUE</span><p>{hint.clue}</p></div>}<div className="answers">{q.options.map((o,i)=>{const eliminated=hint.eliminate===o;const state=result?(o===String(result.answer)?'correct':o===selected?'wrong':''):'';return <button disabled={Boolean(selected)||loading||eliminated} className={`answer ${state} ${eliminated?'eliminated':''}`} key={o} onClick={()=>answer(o)}><span>{String.fromCharCode(65+i)}</span>{eliminated?'OPTION REMOVED':o}</button>})}</div>{result&&<div className={`feedback ${correct?'good':'bad'}`}><strong>{correct?'CORRECT.':'NOT QUITE.'}</strong><span>{correct?(screen==='solo'?(q.type==='scramble'?'+2 coins':'+1 coin'):'Score +1'):`The answer is ${String(result.answer)}.`}</span><small>{result.explanation||''}</small></div>}</section>}</main>
- }
- if(screen==='levels')return <main className="app-shell inner-screen"><header className="inner-header"><button onClick={home}>←</button><div><p className="eyebrow">SOLO MODE</p><h1>Choose your level.</h1></div><span className="coin-pill">◉ {coins}</span></header><section className="levels-grid">{Array.from({length:10},(_,i)=>{const n=i+1;const unlocked=n<=level;return <button disabled={!unlocked} className={`level-tile ${unlocked?'unlocked':'locked'}`} key={n} onClick={()=>startSolo(n)}><span>{String(n).padStart(2,'0')}</span><strong>{['Roots & Places','Slang & Pidgin','History','Food & Markets','Music','Sport','Nollywood','Language','Culture','Naija Genius'][i]}</strong><small>{unlocked?'READY TO PLAY':'LOCKED'}</small></button>})}</section></main>
- if(screen==='leaderboard'){
-  const board=leaderboard; const myId=competitive?.community.find(x=>x.language===language && (x.display_name||x.username))?.user_id;
-  const myRows=competitive?.community.filter(x=>x.language===language).sort((a,b)=>b.score-a.score)||[];
-  const myEntryIndex=myRows.findIndex(x=>x.user_id===myId);
-  return <main className="app-shell inner-screen"><header className="inner-header"><button onClick={home}>←</button><div><p className="eyebrow">COMPETITIVE · {languages.find(x=>x.code===language)?.label}</p><h1>Know your standing.</h1></div></header>{competitiveLoading?<section className="question-card" style={{textAlign:'center'}}><p>Loading your competitive record…</p></section>:<><section className="competitive-summary"><div><span>FRIEND WINS</span><strong>{competitive?.friend.wins??0}</strong></div><div><span>DUELS PLAYED</span><strong>{competitive?.friend.played??0}</strong></div><div><span>BEST DUEL</span><strong>{competitive?.friend.best_score??0}</strong></div></section><section className="competitive-section"><div className="section-heading"><div><p className="eyebrow">COMMUNITY</p><h2>{language.toUpperCase()} LEADERBOARD</h2></div><span>{myEntryIndex>=0?`#${myEntryIndex+1}`:'—'}</span></div>{leaderboardLoading?<p className="auth-message">Loading the board…</p>:board.length===0?<p className="auth-message">No scores yet. Be the first.</p>:board.map(row=><div className={`rank-row ${row.user_id===myId?'is-you':''}`} key={`${row.user_id}-${row.rank}`}><span className="rank">{row.rank}</span><span className="avatar">{(row.display_name||row.username||'?').slice(0,1).toUpperCase()}</span><strong>{row.user_id===myId?'YOU':row.display_name||row.username||'Player'}</strong><span>{row.score}</span></div>)}</section><section className="competitive-section"><div className="section-heading"><div><p className="eyebrow">YOUR HISTORY</p><h2>RECENT COMMUNITY RUNS</h2></div></div>{competitive?.my_attempts.length?<div className="attempt-history">{competitive.my_attempts.map((a,i)=><div className="attempt-row" key={`${a.created_at}-${i}`}><div><strong>{languages.find(x=>x.code===a.language)?.label}</strong><small>{new Date(a.created_at).toLocaleDateString()} · {a.answered_count} answered</small></div><b>{a.score}</b></div>)}</div>:<p className="auth-message">Your completed Community runs will appear here.</p>}</section></>}</main>
- }
- return <main className="app-shell"><div className="pattern"/><header className="topbar"><button className="mini-mark" onClick={home}>T9</button><div className="topbar-actions"><span className="coin-pill">◉ {coins}</span><span className="status-dot"/><span>{anonymous?'GUEST':'SIGNED IN'}</span><button className="icon-button" onClick={()=>setMenuOpen(v=>!v)}>☰</button></div>{menuOpen&&<div className="quick-menu"><button onClick={()=>{setProfileOpen(true);setMenuOpen(false)}}>Profile & settings</button><button onClick={()=>{setScreen('leaderboard');setMenuOpen(false)}}>Leaderboard</button>{anonymous&&<button onClick={()=>{setProfileOpen(true);setMenuOpen(false)}}>Protect progress</button>}{!anonymous&&<button onClick={()=>supabase.auth.signOut()}>Sign out</button>}</div>}</header><section className="hero"><p className="eyebrow">OFFICIAL NIGERIAN TRIVIA</p><h1><span>TRIVIA</span> <em>9JA</em></h1><p className="tagline">You say you’re a Naija genius? Prove it.</p><div className="gold-line"/><div className="hero-pattern"><i/><i/><i/><i/></div></section><section className="language-section"><p className="section-label">PLAY IN YOUR LANGUAGE</p><div className="language-control">{languages.map(x=><button key={x.code} className={language===x.code?'language active':'language'} onClick={()=>setLanguage(x.code)}><span className="language-short">{x.short}</span>{x.label}</button>)}</div></section><section className="modes"><article className="mode-card solo-card"><div className="mode-topline"><span>01</span><span>SOLO MODE</span></div><div className="mode-visual"><div className="orb"><BrainIcon/></div></div><div className="mode-copy"><h2>Test your<br/>knowledge.</h2><p>Climb through 10 levels of Nigerian culture, history, language and everyday brilliance.</p><div className="mode-meta"><span>10 LEVELS</span><span>+ COINS</span></div><button className="primary-action" onClick={()=>setScreen('levels')}>PLAY SOLO <Arrow/></button></div></article><article className="mode-card community-card"><div className="mode-topline"><span>02</span><span>COMMUNITY</span></div><span className="free-badge">FREE TODAY</span><div className="mode-visual"><div className="orb gold"><TrophyIcon/></div></div><div className="mode-copy"><h2>Take on<br/>the nation.</h2><p>Three minutes. As many questions as you can handle. Your score goes on the board.</p><div className="mode-meta"><span>3 MINUTES</span><span>LEADERBOARD</span><span className="free">1 FREE / 24H</span></div><button className="secondary-action" onClick={startCommunity}>PLAY COMMUNITY CHALLENGE <Arrow/></button></div></article><article className="mode-card solo-card"><div className="mode-topline"><span>03</span><span>FRIEND MODE</span></div><div className="mode-visual"><div className="orb"><TrophyIcon/></div></div><div className="mode-copy"><h2>Challenge<br/>someone.</h2><p>90 seconds. Challenge a friend, join by code, or find a rival waiting in your language.</p><div className="mode-meta"><span>90 SECONDS</span><span>1V1</span></div><button className="primary-action" onClick={()=>setScreen('friend')}>PLAY FRIEND MODE <Arrow/></button></div></article></section><button className="leaderboard-preview" onClick={()=>setScreen('leaderboard')}><div className="bars"><i/><i/><i/><i/></div><div><p className="eyebrow">COMMUNITY LEADERBOARD</p><h3>See who knows Naija.</h3></div><Arrow/></button><footer><i/><span>NAIJA KNOWS</span><i/></footer>{profileOpen&&<ProfilePanel onClose={()=>setProfileOpen(false)}/>} {authMode&&<div className="auth-backdrop"><section className="auth-card"><button className="auth-close" onClick={()=>setAuthMode(null)}>×</button><p className="eyebrow">TRIVIA 9JA</p><h2>{authMode==='signup'?'Create your player account.':'Welcome back.'}</h2><p className="auth-subtitle">Your progress, coins and question history stay with your account.</p><form onSubmit={authSubmit}><label>EMAIL<input name="email" type="email" required autoComplete="email"/></label><label>PASSWORD<input name="password" type="password" required minLength={6} autoComplete={authMode==='signup'?'new-password':'current-password'}/></label>{error&&<p className="auth-message">{error}</p>}<button className="primary-action" type="submit">{authMode==='signup'?'CREATE ACCOUNT':'SIGN IN'} <Arrow/></button></form><button className="secondary-action" onClick={()=>setAuthMode(authMode==='signup'?'signin':'signup')}>{authMode==='signup'?'ALREADY HAVE AN ACCOUNT? SIGN IN':'NEED AN ACCOUNT? CREATE ONE'}</button></section></div>}</main>
+  return (
+    <div className="host-wrap">
+      <div className="speech-card">
+        <div className="host-name">{host.name} · {host.location}</div>
+        <p>“{host.catchphrase}”</p>
+        <span className="speech-tail" />
+      </div>
+      <div className={`portrait-frame reaction-${reaction}`}>
+        <img src={host.image} alt={host.name} />
+        <span className="live-chip">{badge}</span>
+        <span className="live-dot">● LIVE</span>
+      </div>
+      <div className="host-title">
+        <strong>{host.name} 🇳🇬</strong>
+        <small>{host.title}</small>
+      </div>
+    </div>
+  )
+}
+
+function Home({ language, setLanguage, onPlay, onLeaderboard }: {
+  language: Language
+  setLanguage: (language: Language) => void
+  onPlay: (view: 'solo' | 'community') => void
+  onLeaderboard: () => void
+}) {
+  return (
+    <div className="workspace">
+      <section className="left-panel">
+        <div className="topbar">
+          <button className="icon-button" aria-label="Menu"><Icon name="menu" /></button>
+          <div className="coin-display"><span>₦</span><b>500</b></div>
+          <button className="topup"><Icon name="zap" /> TOP UP</button>
+          <button className="icon-button amber" aria-label="Theme"><Icon name="sun" /></button>
+          <button className="avatar-button" aria-label="Profile"><Icon name="user" /></button>
+        </div>
+
+        <div className="brand-area">
+          <div className="eyebrow-pill">✦ OFFICIAL NIGERIAN TRIVIA</div>
+          <h1 className="brand">TRIVIA <em>9JA</em></h1>
+          <HostCard language={language} />
+        </div>
+
+        <div className="language-area">
+          <div className="language-label"><span><Icon name="globe" /> ACTIVE QUIZMASTER HOST</span><button>◉ Test Voice</button></div>
+          <div className="language-grid">
+            {languages.map(item => (
+              <button key={item} className={item === language ? 'language active' : 'language'} onClick={() => setLanguage(item)}>
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="right-panel">
+        <button className="mode-card emerald" onClick={() => onPlay('solo')}>
+          <div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
+          <div className="mode-body">
+            <div className="mode-icon"><Icon name="brain" /></div>
+            <div>
+              <h2>10 Questions. 800ms Auto-Next.</h2>
+              <div className="tags"><span>LIVE VOICE COMMENTARY</span><span className="gold">₦ EARN COINS</span></div>
+            </div>
+          </div>
+          <span className="action-button green">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
+        </button>
+
+        <button className="mode-card gold" onClick={() => onPlay('community')}>
+          <div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
+          <div className="mode-body">
+            <div className="mode-icon gold-icon"><Icon name="trophy" /></div>
+            <div>
+              <h2>Take on the nation.</h2>
+              <p>Compete against state champions online!</p>
+            </div>
+          </div>
+          <span className="action-button amber-action">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
+        </button>
+
+        <button className="leaderboard-strip" onClick={onLeaderboard}>
+          <span className="leader-icon"><Icon name="chart" /></span>
+          <span><b>LEADERBOARD</b><small>• See who knows Naija.</small></span>
+          <Icon name="arrow" />
+        </button>
+      </section>
+    </div>
+  )
+}
+
+function GamePreview({ mode, language, onBack }: { mode: 'solo' | 'community'; language: Language; onBack: () => void }) {
+  const community = mode === 'community'
+  return (
+    <div className="game-screen">
+      <header className="game-header">
+        <button className="icon-button" onClick={onBack}><Icon name="x" /></button>
+        <div className="game-logo">TRIVIA <em>9JA</em></div>
+        <div className={community ? 'timer urgent' : 'timer'}>◷ {community ? '2:59' : '1:59'}</div>
+      </header>
+      <div className="progress"><span /></div>
+      <HostCard language={language} />
+      <section className="question-panel">
+        <div className="question-meta"><span>{community ? 'COMMUNITY CHALLENGE' : 'QUESTION 01/10'}</span><span>{language}</span></div>
+        <div className="question-card">
+          <small>NIGERIAN TRIVIA</small>
+          <h2>Which Nigerian city is famously known as the “Coal City”?</h2>
+        </div>
+        <div className="answer-grid">
+          {['Ibadan', 'Enugu', 'Abeokuta', 'Jos'].map((answer, i) => (
+            <button key={answer}><span>{String.fromCharCode(65 + i)}</span>{answer}</button>
+          ))}
+        </div>
+        <div className="hint-row">
+          <button><b>−</b><span>ELIMINATE</span><small>1 COIN</small></button>
+          <button><b>?</b><span>CLUE</span><small>2 COINS</small></button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function Overlay({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="overlay">
+      <section className="dialog">
+        <button className="dialog-close" onClick={onClose}><Icon name="x" /></button>
+        <div className="dialog-heading"><span>TRIVIA 9JA</span><h2>{title}</h2></div>
+        {children}
+      </section>
+    </div>
+  )
+}
+
+function App() {
+  const [view, setView] = useState<View>('home')
+  const [language, setLanguage] = useState<Language>('English')
+  const [overlay, setOverlay] = useState<'menu' | 'profile' | 'settings' | null>(null)
+
+  if (view === 'solo' || view === 'community') {
+    return <GamePreview mode={view} language={language} onBack={() => setView('home')} />
+  }
+
+  return (
+    <main className="app">
+      {view === 'home' && (
+        <Home language={language} setLanguage={setLanguage} onPlay={setView} onLeaderboard={() => setView('leaderboard')} />
+      )}
+
+      {view === 'leaderboard' && (
+        <div className="inner-page">
+          <button className="back-link" onClick={() => setView('home')}>← BACK HOME</button>
+          <p className="eyebrow">COMPETITIVE · {language.toUpperCase()}</p>
+          <h1>Naija National Rankings</h1>
+          <div className="rank-list">
+            {['Chidi_Lagos', 'Amina_Abuja', 'Tunde_Vibes', 'Emeka_PH', 'Zainab_Kano'].map((name, i) => (
+              <div className="rank-row" key={name}><b>#{i + 1}</b><span>{['👑','🦅','⚡','🔥','✨'][i]}</span><strong>{name}</strong><small>{[18450,16920,14100,12850,11200][i]} pts</small></div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {view === 'profile' && (
+        <div className="inner-page">
+          <button className="back-link" onClick={() => setView('home')}>← BACK HOME</button>
+          <p className="eyebrow">PLAYER PROFILE</p>
+          <h1>NaijaGenius_01</h1>
+          <p className="profile-copy">Trivia King & Lagos Genius</p>
+          <div className="profile-stat-grid"><div><small>COINS</small><b>500</b></div><div><small>STREAK</small><b>8x</b></div><div><small>RANK</small><b>#42</b></div></div>
+        </div>
+      )}
+
+      {view === 'settings' && (
+        <div className="inner-page">
+          <button className="back-link" onClick={() => setView('home')}>← BACK HOME</button>
+          <p className="eyebrow">SETTINGS</p>
+          <h1>Experience controls</h1>
+          <div className="settings-list"><button>Quizmaster voice <b>ON</b></button><button>Sound effects <b>ON</b></button><button>Theme <b>DARK</b></button></div>
+        </div>
+      )}
+
+      {view === 'home' && overlay === 'menu' && (
+        <Overlay title="Menu & Settings" onClose={() => setOverlay(null)}>
+          <button className="dialog-action" onClick={() => { setOverlay(null); setView('profile') }}>Profile & settings <Icon name="arrow" /></button>
+          <button className="dialog-action" onClick={() => { setOverlay(null); setView('leaderboard') }}>National leaderboard <Icon name="arrow" /></button>
+          <button className="dialog-action" onClick={() => { setOverlay(null); setView('settings') }}>Experience controls <Icon name="arrow" /></button>
+        </Overlay>
+      )}
+
+      {view === 'home' && overlay === 'profile' && (
+        <Overlay title="Your Profile" onClose={() => setOverlay(null)}>
+          <div className="profile-card"><div className="profile-avatar"><Icon name="user" /></div><div><b>NaijaGenius_01</b><small>Lagos State 🇳🇬</small></div></div>
+          <button className="dialog-action">EDIT PROFILE <Icon name="arrow" /></button>
+        </Overlay>
+      )}
+
+      {view === 'home' && overlay === 'settings' && (
+        <Overlay title="Settings" onClose={() => setOverlay(null)}>
+          <button className="dialog-action">Quizmaster TTS <b>ENABLED</b></button>
+          <button className="dialog-action">Sound FX <b>ON</b></button>
+          <button className="dialog-action">Theme <b>DARK</b></button>
+        </Overlay>
+      )}
+
+      {view === 'home' && (
+        <div className="floating-controls">
+          <button className="icon-button" onClick={() => setOverlay('menu')}><Icon name="menu" /></button>
+          <button className="avatar-button" onClick={() => setOverlay('profile')}><Icon name="user" /></button>
+        </div>
+      )}
+    </main>
+  )
 }
 
 export default App
