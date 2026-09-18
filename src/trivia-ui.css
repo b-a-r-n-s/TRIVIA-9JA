@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --ui-bg:#070b09;
+  --ui-panel:#0b1210;
+  --ui-panel-2:#0f1814;
+  --ui-green:#0d704d;
+  --ui-green-hi:#20bd80;
+  --ui-gold:#e2b75b;
+  --ui-cream:#f4efe3;
+  --ui-muted:#9aa59e;
+  --ui-line:#293932;
+}
+
+html,body,#root{min-width:320px;background:var(--ui-bg);color:var(--ui-cream)}
+body{font-family:Inter,sans-serif}
+button,input{font:inherit}
+button{touch-action:manipulation}
+
+/* HOME: the supplied design becomes the visual system, while AppRebuild remains the source of truth for state/actions. */
+.app-shell:not(.inner-screen){
+  width:100%;
+  min-height:100svh;
+  max-width:none;
+  margin:0;
+  padding:clamp(14px,2vw,28px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:auto;
+  background:
+    radial-gradient(circle at 12% 90%,rgba(20,139,94,.08),transparent 28%),
+    radial-gradient(circle at 90% 10%,rgba(226,183,91,.045),transparent 24%),
+    var(--ui-bg)!important;
+}
+
+.app-shell:not(.inner-screen)>.home-topbar{
+  position:absolute;
+  top:clamp(14px,2vw,28px);
+  left:clamp(14px,2vw,28px);
+  right:clamp(14px,2vw,28px);
+  z-index:40;
+  width:auto;
+  max-width:none;
+}
+
+/* Desktop composition: left brand/host panel, right action panel. */
+.app-shell:not(.inner-screen){
+  --home-max:1280px;
+}
+.app-shell:not(.inner-screen)>.reference-hero,
+.app-shell:not(.inner-screen)>.home-language,
+.app-shell:not(.inner-screen)>.home-card,
+.app-shell:not(.inner-screen)>.home-leaderboard,
+.app-shell:not(.inner-screen)>.home-footer{
+  position:relative;
+}
+.app-shell:not(.inner-screen)>.reference-hero{
+  width:min(40%,500px);
+  min-height:650px;
+  margin:0;
+  padding:120px 42px 42px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  border:1px solid var(--ui-line);
+  border-radius:34px;
+  background:linear-gradient(150deg,#0b1511,#070d0b 72%);
+  overflow:hidden;
+}
+.app-shell:not(.inner-screen)>.reference-hero .reference-logo{
+  justify-content:center;
+}
+.app-shell:not(.inner-screen)>.reference-art{pointer-events:none}
+
+.app-shell:not(.inner-screen)>.home-language{
+  width:min(40%,500px);
+  margin:0;
+  position:absolute;
+  left:calc(50% - min(40%,500px)/2);
+  bottom:clamp(28px,5vw,58px);
+  padding:0 42px;
+  z-index:8;
+}
+
+.app-shell:not(.inner-screen)>.home-card.solo,
+.app-shell:not(.inner-screen)>.home-card.community,
+.app-shell:not(.inner-screen)>.home-leaderboard,
+.app-shell:not(.inner-screen)>.home-footer{
+  width:calc(min(60%,760px) - 20px);
+  margin-left:calc(min(40%,500px) + 20px);
+}
+.app-shell:not(.inner-screen)>.home-card.solo{
+  margin-top:0;
+}
+.app-shell:not(.inner-screen)>.home-card.solo,
+.app-shell:not(.inner-screen)>.home-card.community{
+  min-height:265px;
+  padding:25px 28px;
+  border-radius:28px;
+}
+.app-shell:not(.inner-screen)>.home-card.solo{
+  background:linear-gradient(145deg,#0e7650,#075139 58%,#063a2a);
+  border:1px solid #1c9a69;
+}
+.app-shell:not(.inner-screen)>.home-card.community{
+  background:linear-gradient(145deg,#121611,#080d0b 72%);
+  border:1px solid #a27631;
+}
+.app-shell:not(.inner-screen)>.home-card .card-main{
+  grid-template-columns:150px minmax(0,1fr);
+  gap:25px;
+  min-height:155px;
+  align-items:center;
+}
+.app-shell:not(.inner-screen)>.home-card.community .card-main{
+  grid-template-columns:135px minmax(0,1fr);
+}
+.app-shell:not(.inner-screen)>.home-card h2{font:400 clamp(34px,4vw,52px)/.95 Rye,serif}
+.app-shell:not(.inner-screen)>.home-card .primary-action,
+.app-shell:not(.inner-screen)>.home-card .secondary-action{
+  height:49px;
+  min-height:49px;
+  font-size:10px;
+}
+.app-shell:not(.inner-screen)>.card-orb{
+  width:138px;height:138px;
+}
+.app-shell:not(.inner-screen)>.home-leaderboard{
+  height:72px;
+  min-height:72px;
+  margin-top:12px;
+}
+.app-shell:not(.inner-screen)>.home-footer{
+  margin-top:18px;
+}
+
+/* Header */
+.home-topbar{
+  display:grid!important;
+  grid-template-columns:52px auto auto 1fr 52px 52px;
+  align-items:center;
+  gap:8px;
+  min-height:52px;
+}
+.home-menu,.home-bell,.home-profile{
+  width:52px!important;height:52px!important;min-width:52px!important;
+  display:grid!important;place-items:center!important;
+  border:1px solid #2b3a33!important;
+  border-radius:16px!important;
+  background:#09100d!important;
+  color:var(--ui-cream)!important;
+}
+.home-menu span,.home-menu span:before,.home-menu span:after{
+  display:block!important;width:23px!important;height:2px!important;
+  background:#eee9df!important;border-radius:4px!important;
+}
+.home-menu span{position:relative}.home-menu span:before,.home-menu span:after{content:'';position:absolute;left:0}
+.home-menu span:before{top:-7px}.home-menu span:after{top:7px}
+.home-wallet{
+  height:46px!important;min-width:105px!important;
+  display:flex!important;align-items:center;justify-content:center;gap:8px;
+  padding:0 10px!important;border:1px solid rgba(226,183,91,.38)!important;
+  border-radius:999px!important;background:rgba(226,183,91,.08)!important;
+}
+.home-wallet b{display:grid!important;place-items:center;width:30px!important;height:30px!important;border-radius:50%;background:var(--ui-gold);color:#19140a;font-size:15px}
+.home-wallet strong{font-size:14px;color:var(--ui-cream)}
+.home-credit{height:42px!important;padding:0 15px!important;border:1px solid #1d7657!important;border-radius:999px!important;background:#0a3528!important;color:#dce9e1!important;font-size:9px!important;font-weight:800!important;letter-spacing:.08em}
+.home-balance{height:46px!important;min-width:88px!important;justify-content:center;align-items:center;display:flex!important;border:1px solid #293730!important;border-radius:999px!important;background:#09100d!important;font-size:12px!important;color:var(--ui-cream)!important}
+.home-balance:before{content:'₦ ';color:var(--ui-gold)}
+.home-bell,.home-profile{font-size:0!important}
+.home-bell:before{content:'◔';font-size:20px;color:#ddd9ce;transform:rotate(-25deg)}
+.home-profile:before{content:'●';font-size:18px;color:#ddd9ce}
+.quick-menu{position:absolute!important;top:60px!important;left:0!important;min-width:210px!important;padding:8px!important;border:1px solid var(--ui-line)!important;border-radius:18px!important;background:#0b1210!important;box-shadow:0 20px 50px rgba(0,0,0,.45)!important}
+.quick-menu button{display:block;width:100%;padding:10px;border:0;background:transparent;color:#e8e2d6;text-align:left;border-radius:10px;font-size:11px}
+.quick-menu button:hover{background:#122019}
+
+/* Hero typography */
+.reference-hero .eyebrow{font:700 10px Inter,sans-serif;letter-spacing:.28em;color:#d2c29d}
+.reference-logo{display:flex;align-items:flex-end;gap:8px;white-space:nowrap;line-height:.8}
+.reference-logo span{font:400 clamp(62px,8vw,108px)/.8 Rye,serif;color:var(--ui-cream);text-shadow:2px 3px 0 rgba(0,0,0,.35)}
+.reference-logo em{font:700 clamp(62px,8vw,104px)/.75 Caveat,cursive;font-style:normal;color:#20c985;letter-spacing:-.07em;transform:rotate(-4deg);text-shadow:2px 3px 0 rgba(0,0,0,.28)}
+.reference-tagline{font:600 15px/1.4 Inter,sans-serif;color:#e8e2d6;max-width:340px;margin-top:20px}
+.reference-art{opacity:.2!important}
+
+/* Language */
+.home-language .section-label{margin:0 0 8px 3px;font:700 8px Inter,sans-serif;letter-spacing:.24em;color:#bba979}
+.home-language .language-control{display:grid;grid-template-columns:repeat(4,1fr);height:50px;padding:3px;border:1px solid #26342e;border-radius:999px;background:#080f0c}
+.home-language .language{min-width:0;min-height:42px;border:0;border-radius:999px;background:transparent;color:#89938d;font:600 10px Inter,sans-serif}
+.home-language .language.active{background:linear-gradient(180deg,#1d9f6e,#0d704d);color:#fff;box-shadow:inset 0 0 0 1px rgba(55,211,151,.7),0 7px 18px rgba(9,111,76,.18)}
+
+/* Cards */
+.home-card{position:relative;display:grid!important;grid-template-rows:auto 1fr auto!important;overflow:hidden!important;box-shadow:0 18px 42px rgba(0,0,0,.18)}
+.home-card:before{content:'';position:absolute;right:-75px;bottom:-120px;width:250px;height:250px;border:1px solid rgba(46,194,135,.14);transform:rotate(45deg);pointer-events:none}
+.home-card.community:before{border-color:rgba(226,183,91,.14)}
+.home-card .card-top{position:relative;z-index:2;display:flex;gap:8px;font:700 9px Inter,sans-serif;letter-spacing:.2em;color:#9bd8bb}
+.home-card.community .card-top{color:#c8ad75}
+.card-orb{position:relative;display:grid!important;place-items:center!important;border-radius:50%!important;background:radial-gradient(circle at 32% 25%,#5ed2a3,#178a60 43%,#06432f 78%)!important;border:1px solid rgba(237,201,116,.55)!important;box-shadow:0 0 0 8px rgba(3,38,27,.28),inset 0 0 20px rgba(255,222,142,.11),0 12px 25px rgba(0,0,0,.22)!important;color:#dce9df!important}
+.card-orb svg{display:block!important;width:74px!important;height:74px!important}
+.card-orb.gold{background:radial-gradient(circle,#211d13,#0b0d0c 70%)!important;border-color:rgba(226,183,91,.7)!important}
+.card-orb.gold svg{color:var(--ui-gold)!important}
+.home-card h2{position:relative;z-index:2;margin:0;color:#f5f0e5}
+.home-meta{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:11px;font:700 8px Inter,sans-serif;letter-spacing:.08em;color:#b9dec9}
+.home-card.community .home-meta{color:#c7c2b6}
+.home-card .primary-action,.home-card .secondary-action{position:relative;z-index:4;width:100%;display:flex!important;align-items:center;justify-content:space-between;border-radius:999px!important;font:800 9px Inter,sans-serif;letter-spacing:.11em}
+.home-card .primary-action{background:linear-gradient(180deg,#20bc80,#0c8a5d)!important;color:#fff;border:1px solid rgba(91,231,174,.35)!important}
+.home-card .secondary-action{background:transparent!important;color:#e4bd68!important;border:1px solid #ad8038!important}
+.home-card .arrow{font-size:17px}
+.home-card .free-badge{top:15px!important;right:18px!important;padding:6px 9px!important;border-radius:999px!important;background:linear-gradient(180deg,#f1cb70,#dba33e)!important;color:#20170a!important;font:800 7px Inter,sans-serif!important;letter-spacing:.07em}
+
+/* Leaderboard */
+.home-leaderboard{display:grid!important;grid-template-columns:48px 1fr 20px;align-items:center;gap:12px;padding:10px 14px;border:1px solid #2c3b34!important;border-radius:20px!important;background:#09110e!important;text-align:left}
+.home-bars{display:flex!important;align-items:end;justify-content:center;gap:4px;height:38px;border-right:1px solid #26362f;padding-right:11px}
+.home-bars i{display:block;width:5px;border-radius:2px 2px 0 0;background:#2bc68a}.home-bars i:nth-child(1){height:11px}.home-bars i:nth-child(2){height:19px}.home-bars i:nth-child(3){height:28px}.home-bars i:nth-child(4){height:36px}
+.home-leaderboard .eyebrow{margin:0;font:700 7px Inter,sans-serif;letter-spacing:.18em;color:#c7b17d}
+.home-leaderboard h3{margin:4px 0 0;font:600 11px/1.25 Inter,sans-serif;color:#e9e4da}
+.home-leaderboard>.arrow{color:var(--ui-gold);font-size:17px}
+.home-footer{display:flex;align-items:center;justify-content:center;gap:10px;font:700 7px Inter,sans-serif;letter-spacing:.22em;color:#caa75d}
+.home-footer i{display:block;width:28px;height:1px;background:#80683b}
+
+/* Keep auth/profile styling within the same visual system. */
+.auth-backdrop{z-index:200!important;background:rgba(0,0,0,.78)!important;backdrop-filter:blur(12px)}
+.auth-card{font-family:Inter,sans-serif!important;background:linear-gradient(145deg,#101813,#080d0b)!important;border-color:#3b4b42!important;border-radius:26px!important}
+.auth-card h2{font-family:Rye,serif!important}
+
+/* Tablet/mobile: one column, same design language. */
+@media(max-width:900px){
+  .app-shell:not(.inner-screen){
+    display:block;
+    padding:76px 14px 18px;
+    overflow-x:hidden;
+  }
+  .app-shell:not(.inner-screen)>.home-topbar{
+    position:absolute;
+    top:12px;left:12px;right:12px;
+  }
+  .app-shell:not(.inner-screen)>.reference-hero,
+  .app-shell:not(.inner-screen)>.home-language,
+  .app-shell:not(.inner-screen)>.home-card,
+  .app-shell:not(.inner-screen)>.home-leaderboard,
+  .app-shell:not(.inner-screen)>.home-footer{
+    width:100%;
+    margin-left:0;
+    left:auto;
+    bottom:auto;
+  }
+  .app-shell:not(.inner-screen)>.reference-hero{
+    min-height:245px;height:245px;padding:32px 20px 20px;border-radius:25px;
+  }
+  .app-shell:not(.inner-screen)>.reference-hero .reference-logo span{font-size:clamp(50px,15vw,76px)}
+  .app-shell:not(.inner-screen)>.reference-hero .reference-logo em{font-size:clamp(50px,15vw,73px)}
+  .app-shell:not(.inner-screen)>.reference-tagline{font-size:12px;max-width:270px;margin-top:13px}
+  .app-shell:not(.inner-screen)>.home-language{position:relative;padding:0;margin:12px 0}
+  .app-shell:not(.inner-screen)>.home-card.solo,
+  .app-shell:not(.inner-screen)>.home-card.community{min-height:190px;padding:16px;border-radius:22px}
+  .app-shell:not(.inner-screen)>.home-card .card-main{grid-template-columns:82px minmax(0,1fr);gap:13px;min-height:112px}
+  .app-shell:not(.inner-screen)>.home-card.community .card-main{grid-template-columns:82px minmax(0,1fr)}
+  .app-shell:not(.inner-screen)>.card-orb,.app-shell:not(.inner-screen)>.card-orb.gold{width:78px;height:78px}
+  .app-shell:not(.inner-screen)>.card-orb svg{width:54px;height:54px}
+  .app-shell:not(.inner-screen)>.home-card h2{font-size:25px}
+  .app-shell:not(.inner-screen)>.home-card .primary-action,.app-shell:not(.inner-screen)>.home-card .secondary-action{height:37px;min-height:37px;font-size:8px}
+  .app-shell:not(.inner-screen)>.home-leaderboard{height:61px;min-height:61px;margin-top:3px}
+  .app-shell:not(.inner-screen)>.home-footer{margin-top:13px}
+  .home-topbar{grid-template-columns:42px auto minmax(0,1fr) 42px 42px;gap:5px}
+  .home-menu,.home-bell,.home-profile{width:42px!important;height:42px!important;min-width:42px!important;border-radius:13px!important}
+  .home-wallet{height:40px!important;min-width:72px!important}
+  .home-wallet b{width:25px!important;height:25px!important;font-size:12px}
+  .home-wallet strong{font-size:12px}
+  .home-credit{height:36px!important;font-size:7px!important;padding:0 8px!important}
+  .home-balance{display:none!important}
+}
+
+@media(max-width:390px){
+  .home-topbar{grid-template-columns:36px 62px minmax(0,1fr) 36px 36px}
+  .home-menu,.home-bell,.home-profile{width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important}
+  .home-credit{font-size:6px!important}
+  .reference-logo span{font-size:48px!important}
+  .reference-logo em{font-size:47px!important}
+}
