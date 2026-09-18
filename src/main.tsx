@@ -1,8 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
-import './trivia-ui.css'
-import App from './AppRebuild'
+import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
