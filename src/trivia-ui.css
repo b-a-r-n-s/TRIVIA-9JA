@@ -21,12 +21,14 @@ button{touch-action:manipulation}
 .app-shell:not(.inner-screen){
   width:100%;
   min-height:100svh;
-  max-width:none;
-  margin:0;
-  padding:clamp(14px,2vw,28px);
-  display:flex;
+  max-width:1280px;
+  margin:0 auto;
+  padding:92px 28px 28px;
+  display:grid;
+  grid-template-columns:40% 60%;
+  grid-template-rows:1fr auto auto auto;
+  column-gap:22px;
   align-items:center;
-  justify-content:center;
   overflow:auto;
   background:
     radial-gradient(circle at 12% 90%,rgba(20,139,94,.08),transparent 28%),
@@ -56,7 +58,9 @@ button{touch-action:manipulation}
   position:relative;
 }
 .app-shell:not(.inner-screen)>.reference-hero{
-  width:min(40%,500px);
+  grid-column:1;
+  grid-row:1 / span 4;
+  width:100%;
   min-height:650px;
   margin:0;
   padding:120px 42px 42px;
@@ -76,25 +80,18 @@ button{touch-action:manipulation}
 .app-shell:not(.inner-screen)>.reference-art{pointer-events:none}
 
 .app-shell:not(.inner-screen)>.home-language{
-  width:min(40%,500px);
+  grid-column:1;
+  grid-row:4;
+  width:100%;
   margin:0;
-  position:absolute;
-  left:calc(50% - min(40%,500px)/2);
-  bottom:clamp(28px,5vw,58px);
-  padding:0 42px;
+  padding:0 42px 22px;
   z-index:8;
 }
 
-.app-shell:not(.inner-screen)>.home-card.solo,
-.app-shell:not(.inner-screen)>.home-card.community,
-.app-shell:not(.inner-screen)>.home-leaderboard,
-.app-shell:not(.inner-screen)>.home-footer{
-  width:calc(min(60%,760px) - 20px);
-  margin-left:calc(min(40%,500px) + 20px);
-}
-.app-shell:not(.inner-screen)>.home-card.solo{
-  margin-top:0;
-}
+.app-shell:not(.inner-screen)>.home-card.solo{grid-column:2;grid-row:1;width:100%;margin:0}
+.app-shell:not(.inner-screen)>.home-card.community{grid-column:2;grid-row:2;width:100%;margin:10px 0 0}
+.app-shell:not(.inner-screen)>.home-leaderboard{grid-column:2;grid-row:3;width:100%;margin:12px 0 0}
+.app-shell:not(.inner-screen)>.home-footer{grid-column:2;grid-row:4;width:100%;margin:18px 0 0}
 .app-shell:not(.inner-screen)>.home-card.solo,
 .app-shell:not(.inner-screen)>.home-card.community{
   min-height:265px;
