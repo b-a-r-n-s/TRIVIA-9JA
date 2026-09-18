@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type View = 'home' | 'solo' | 'community' | 'leaderboard' | 'profile' | 'settings'
@@ -195,7 +195,7 @@ function GamePreview({ mode, language, onBack }: { mode: 'solo' | 'community'; l
   )
 }
 
-function Overlay({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+function Overlay({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className="overlay">
       <section className="dialog">
