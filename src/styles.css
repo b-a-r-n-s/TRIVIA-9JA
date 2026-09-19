@@ -276,3 +276,40 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
   .solo-arena .answer-options button{min-height:45px}
   .solo-arena .answer-options button>em{font-size:8px}
 }
+
+/* Light theme for gameplay overlays */
+.game-overlay.light{background:rgba(239,247,243,.92);backdrop-filter:blur(22px)}
+.game-overlay.light .game-modal{background:#ffffff;color:#102019;border-color:rgba(16,185,129,.24);box-shadow:0 30px 90px rgba(20,60,40,.16)}
+.game-overlay.light .game-title{color:#102019}
+.game-overlay.light .game-title em{color:#08784f}
+.game-overlay.light .game-timer{border-color:rgba(8,120,79,.18);background:rgba(16,185,129,.07);color:#08784f}
+.game-overlay.light .game-progress{background:rgba(16,50,35,.08)}
+.game-overlay.light .solo-meta{color:#65736b}
+.game-overlay.light .solo-meta>b{color:#183028}
+.game-overlay.light .solo-meta>b i{color:#84928b}
+.game-overlay.light .solo-host-line{border-color:rgba(16,185,129,.15);background:#f4faf7}
+.game-overlay.light .solo-host-line b{color:#08784f}
+.game-overlay.light .solo-host-line span{color:#52645b}
+.game-overlay.light .solo-question h1{color:#102019}
+.game-overlay.light .question-meta span{color:#08784f}
+.game-overlay.light .clue-text{background:#fff8e8;color:#52645b}
+.game-overlay.light .solo-arena .answer-options button{border-color:rgba(16,50,35,.1);background:#f8fbf9;color:#203028;box-shadow:0 3px 12px rgba(20,50,35,.04)}
+.game-overlay.light .solo-arena .answer-options button:not(:disabled):hover{background:#f0f8f4}
+.game-overlay.light .solo-arena .answer-options button.selected{background:#e9f8f1;border-color:rgba(8,120,79,.4)}
+.game-overlay.light .solo-arena .answer-options button.correct{background:#dcf7e9;border-color:rgba(8,120,79,.45)}
+.game-overlay.light .solo-arena .answer-options button.wrong{background:#fff0f2;border-color:rgba(190,35,60,.35)}
+.game-overlay.light .solo-arena .answer-options button>span{background:rgba(16,185,129,.09);color:#08784f}
+.game-overlay.light .solo-arena .answer-options button.correct>span{background:#10b981;color:#02120b}
+.game-overlay.light .solo-arena .answer-options button.wrong>span{background:#f43f5e;color:#fff}
+.game-overlay.light .answer-feedback{border-color:rgba(8,120,79,.18);background:#f2faf6}
+.game-overlay.light .answer-feedback.negative{border-color:rgba(190,35,60,.18);background:#fff4f5}
+.game-overlay.light .answer-feedback p{color:#52645b}
+.game-overlay.light .solo-footer .hint-row button{background:#fff;border-color:rgba(16,50,35,.1);color:#30463c}
+.game-overlay.light .solo-footer .hint-row small{color:#68776f}
+.game-overlay.light .result-modal{color:#102019}
+.game-overlay.light .result-modal h1{color:#102019}
+.game-overlay.light .result-copy{color:#607069}
+.game-overlay.light .result-copy strong{color:#183028}
+.game-overlay.light .result-stats div{background:#f5f8f6;border-color:rgba(16,50,35,.1)}
+.game-overlay.light .result-secondary{background:#f4f8f5;color:#203028;border-color:rgba(8,120,79,.18)}
+.game-overlay.light .icon-button{background:#f4f8f6;border-color:rgba(16,50,35,.1);color:#52645b}
