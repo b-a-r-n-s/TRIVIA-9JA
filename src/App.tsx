@@ -98,7 +98,7 @@ function App() {
   const [displayName, setDisplayName] = useState('NaijaGenius_01')
   const [tagline, setTagline] = useState('Trivia King & Lagos Genius 👑')
   const isDark = theme === 'dark'
-  const selectedAvatarEmoji = selectedAvatarEmoji
+  const selectedAvatarEmoji = avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'
 
   useEffect(() => {
     window.history.replaceState(
