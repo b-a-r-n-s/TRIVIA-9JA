@@ -67,26 +67,186 @@ function Overlay({ title, children, onClose }: { title: string; children: ReactN
   </div>
 }
 
-function PresentationScreen({ mode, language, onClose }: { mode: GameMode; language: Language; onClose: () => void }) {
-  const host = hosts[language]
-  return <div className="game-overlay">
-    <div className="game-modal">
-      <div className="game-head"><button className="icon-button" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className="game-timer">{mode === 'community' ? '3:00' : '2:00'}</div></div>
-      <div className="game-progress"><span /></div>
-      <div className="game-status"><span>{mode === 'community' ? 'COMMUNITY CHALLENGE' : 'SOLO MODE'}</span><span className="streak">10 QUESTIONS</span></div>
-      <div className="game-host-strip"><img src={host.image} alt="" /><div><b>{host.name} · LIVE COMMENTARY</b><span>“{host.catchphrase}”</span></div><Icon name="mic" /></div>
-      <div className="question-label">QUESTION PRESENTATION · {language.toUpperCase()}</div>
-      <div className="question-card">
-        <small>THE GAME ENGINE WILL RENDER THE REAL QUESTION HERE</small>
-        <h2>Your question appears here.</h2>
-        <div className="answer-options">{['Answer option A', 'Answer option B', 'Answer option C', 'Answer option D'].map((answer, i) => <button key={answer}><span>{String.fromCharCode(65 + i)}</span>{answer}</button>)}</div>
+type SoloQuestion = {
+  id: number
+  category: string
+  question: string
+  options: string[]
+  answer: number
+  explanation: string
+}
+
+const soloQuestions: Record<Language, SoloQuestion[]> = {
+  English: [
+    { id: 1, category: 'NIGERIA', question: 'Which city is known as the Centre of Excellence?', options: ['Lagos', 'Abuja', 'Ibadan', 'Kano'], answer: 0, explanation: 'Lagos State is popularly known as the Centre of Excellence.' },
+    { id: 2, category: 'AFRICA', question: 'Which is the largest country in Africa by land area?', options: ['Nigeria', 'Algeria', 'Egypt', 'DR Congo'], answer: 1, explanation: 'Algeria is Africa’s largest country by land area.' },
+    { id: 3, category: 'SCIENCE', question: 'What is the SI unit of electrical resistance?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'], answer: 2, explanation: 'Electrical resistance is measured in ohms (Ω).' },
+    { id: 4, category: 'NIGERIA', question: 'How many states make up Nigeria?', options: ['30', '36', '37', '40'], answer: 1, explanation: 'Nigeria has 36 states, plus the Federal Capital Territory.' },
+    { id: 5, category: 'HISTORY', question: 'Who was Nigeria’s first female Nobel Prize winner?', options: ['Chimamanda Adichie', 'Ngozi Okonjo-Iweala', 'Funmilayo Ransome-Kuti', 'Wangari Maathai'], answer: 3, explanation: 'Wangari Maathai won the Nobel Peace Prize in 2004. She was Kenyan.' },
+    { id: 6, category: 'CULTURE', question: 'Which Nigerian language is predominantly spoken by the Yoruba people?', options: ['Igbo', 'Yorùbá', 'Hausa', 'Tiv'], answer: 1, explanation: 'Yorùbá is the principal language of the Yoruba people.' },
+    { id: 7, category: 'TECH', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Power Unit', 'Core Program Utility', 'Central Program User'], answer: 0, explanation: 'CPU means Central Processing Unit.' },
+    { id: 8, category: 'AFRICA', question: 'Which river is the longest in Africa?', options: ['Niger', 'Congo', 'Nile', 'Benue'], answer: 2, explanation: 'The Nile is generally recognized as Africa’s longest river.' },
+    { id: 9, category: 'RIDDLE', question: 'I have keys but no locks, and space but no room. What am I?', options: ['A map', 'A keyboard', 'A house', 'A piano'], answer: 1, explanation: 'A keyboard has keys and a space bar, but no locks or physical room.' },
+    { id: 10, category: 'NIGERIA', question: 'What is the capital of Nigeria?', options: ['Lagos', 'Kaduna', 'Abuja', 'Port Harcourt'], answer: 2, explanation: 'Abuja is Nigeria’s federal capital.' },
+  ],
+  Hausa: [],
+  Yorùbá: [],
+  Igbo: [],
+}
+
+(languages.slice(1) as Language[]).forEach(language => {
+  soloQuestions[language] = soloQuestions.English
+})
+
+function PresentationScreen({ language, onClose }: { mode: GameMode; language: Language; onClose: () => void }) {
+  const questions = soloQuestions[language]
+  const [questionIndex, setQuestionIndex] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [eliminated, setEliminated] = useState<number[]>([])
+  const [hintUsed, setHintUsed] = useState(false)
+  const [score, setScore] = useState(0)
+  const [coins, setCoins] = useState(500)
+  const [secondsLeft, setSecondsLeft] = useState(120)
+  const [finished, setFinished] = useState(false)
+
+  const question = questions[questionIndex]
+  const answered = selectedAnswer !== null
+  const correct = answered && selectedAnswer === question.answer
+
+  useEffect(() => {
+    if (finished || answered) return
+    const timer = window.setInterval(() => {
+      setSecondsLeft(seconds => {
+        if (seconds <= 1) {
+          window.clearInterval(timer)
+          setFinished(true)
+          return 0
+        }
+        return seconds - 1
+      })
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [finished, answered, questionIndex])
+
+  const chooseAnswer = (index: number) => {
+    if (answered || eliminated.includes(index)) return
+    setSelectedAnswer(index)
+    if (index === question.answer) {
+      setScore(value => value + 1)
+      setCoins(value => value + 1)
+    }
+  }
+
+  const nextQuestion = () => {
+    if (questionIndex === questions.length - 1) {
+      setFinished(true)
+      return
+    }
+    setQuestionIndex(value => value + 1)
+    setSelectedAnswer(null)
+    setEliminated([])
+    setHintUsed(false)
+  }
+
+  const useEliminate = () => {
+    if (answered || eliminated.length >= 2 || coins < 1) return
+    const candidates = question.options.map((_, index) => index).filter(index => index !== question.answer && !eliminated.includes(index))
+    const target = candidates[0]
+    if (target === undefined) return
+    setCoins(value => value - 1)
+    setEliminated(value => [...value, target])
+  }
+
+  const useClue = () => {
+    if (answered || hintUsed || coins < 2) return
+    setCoins(value => value - 2)
+    setHintUsed(true)
+  }
+
+  if (finished) {
+    const percentage = Math.round((score / questions.length) * 100)
+    return <div className="game-overlay">
+      <div className="game-modal result-modal">
+        <div className="result-kicker">ROUND COMPLETE</div>
+        <div className="result-mark">✓</div>
+        <p className="result-overline">SOLO · {language.toUpperCase()}</p>
+        <h1>{score === 10 ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
+        <p className="result-copy">You got <strong>{score}/10</strong> correct and finished with <strong>{percentage}%</strong>.</p>
+        <div className="result-stats">
+          <div><b>{score}</b><span>CORRECT</span></div>
+          <div><b>+{score}</b><span>COINS EARNED</span></div>
+          <div><b>{coins}</b><span>COIN BALANCE</span></div>
+        </div>
+        <div className="result-actions">
+          <button className="result-primary" onClick={() => {
+            setQuestionIndex(0); setSelectedAnswer(null); setEliminated([]); setHintUsed(false); setScore(0); setCoins(500); setSecondsLeft(120); setFinished(false)
+          }}>PLAY AGAIN <Icon name="arrow" /></button>
+          <button className="result-secondary" onClick={onClose}>BACK TO ARENA</button>
+        </div>
       </div>
-      <div className="auto-note">Presentation layer only. Gameplay state, scoring, timers, persistence and answer handling are intentionally not implemented here.</div>
-      <div className="hint-row"><button><b>−</b><span>ELIMINATE</span><small>1 COIN</small></button><button><b>?</b><span>CLUE</span><small>2 COINS</small></button></div>
+    </div>
+  }
+
+  const formattedTime = \`${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}\`
+  const progress = ((questionIndex + 1) / questions.length) * 100
+
+  return <div className="game-overlay solo-arena">
+    <div className="game-modal">
+      <div className="game-head">
+        <button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button>
+        <div className="game-title">TRIVIA <em>9JA</em></div>
+        <div className={\`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}\`}>◷ {formattedTime}</div>
+      </div>
+
+      <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
+      <div className="solo-meta"><span>SOLO MODE</span><b>QUESTION {questionIndex + 1}<i>/10</i></b><strong>₦ {coins}</strong></div>
+
+      <div className="solo-host-line">
+        <img src={hosts[language].image} alt="" />
+        <div><b>{hosts[language].name}</b><span>{answered ? (correct ? 'That one is correct.' : 'Not quite. Stay sharp.') : hosts[language].catchphrase}</span></div>
+        <Icon name={answered ? 'volume' : 'mic'} />
+      </div>
+
+      <div className="solo-question">
+        <div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div>
+        <h1>{question.question}</h1>
+        {hintUsed && <p className="clue-text">Clue: think about the most widely accepted answer, not the closest-sounding option.</p>}
+      </div>
+
+      <div className="answer-options">
+        {question.options.map((answer, index) => {
+          const isSelected = selectedAnswer === index
+          const isCorrect = answered && index === question.answer
+          const isWrong = answered && isSelected && !isCorrect
+          const isEliminated = eliminated.includes(index)
+          return <button
+            key={answer}
+            className={(isSelected ? 'selected ' : '') + (isCorrect ? 'correct ' : '') + (isWrong ? 'wrong ' : '') + (isEliminated ? 'eliminated' : '')}
+            onClick={() => chooseAnswer(index)}
+            disabled={answered || isEliminated}
+          >
+            <span>{String.fromCharCode(65 + index)}</span>
+            <em>{answer}</em>
+            {isCorrect && <b>✓</b>}{isWrong && <b>×</b>}
+          </button>
+        })}
+      </div>
+
+      {answered && <div className={\`answer-feedback ${correct ? 'positive' : 'negative'}\`}>
+        <div><b>{correct ? 'CORRECT' : 'NOT THIS TIME'}</b><span>{correct ? '+1 coin' : \`The answer was “${question.options[question.answer]}”.\`}</span></div>
+        <p>{question.explanation}</p>
+      </div>}
+
+      <div className="solo-footer">
+        <div className="hint-row">
+          <button className={eliminated.length >= 2 || answered || coins < 1 ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small>1 COIN</small></button>
+          <button className={hintUsed || answered || coins < 2 ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small>2 COINS</small></button>
+        </div>
+        {answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}
+      </div>
     </div>
   </div>
 }
-
 function App() {
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('trivia9ja.language') as Language) || 'English')
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('trivia9ja.theme') as 'dark' | 'light') || 'dark')
