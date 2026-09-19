@@ -96,7 +96,7 @@ const soloQuestions: Record<Language, SoloQuestion[]> = {
   Igbo: englishSoloQuestions,
 }
 
-function PresentationScreen({ mode, language, onClose }: { mode: GameMode; language: Language; onClose: () => void }) {
+function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
   const questions = soloQuestions[language]
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
@@ -163,7 +163,7 @@ function PresentationScreen({ mode, language, onClose }: { mode: GameMode; langu
 
   if (finished) {
     const percentage = Math.round((score / questions.length) * 100)
-    return <div className="game-overlay">
+    return <div className={'game-overlay ' + (isDark ? 'dark' : 'light')}>
       <div className="game-modal result-modal">
         <div className="result-kicker">ROUND COMPLETE</div>
         <div className="result-mark">✓</div>
@@ -189,7 +189,7 @@ function PresentationScreen({ mode, language, onClose }: { mode: GameMode; langu
   const progress = ((questionIndex + 1) / questions.length) * 100
   const isSolo = mode === 'solo'
 
-  return <div className="game-overlay solo-arena">
+  return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal">
       <div className="game-head">
         <button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button>
@@ -308,7 +308,7 @@ function App() {
     }
   }
 
-  if (presentation) return <PresentationScreen mode={presentation} language={language} onClose={goBack} />
+  if (presentation) return <PresentationScreen mode={presentation} language={language} isDark={isDark} onClose={goBack} />
 
   return <main className={'app ' + (isDark ? 'dark' : 'light')}>
     <div className="ambient ambient-green" /><div className="ambient ambient-amber" />
