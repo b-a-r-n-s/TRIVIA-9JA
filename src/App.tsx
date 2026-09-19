@@ -124,13 +124,13 @@ function App() {
       </section>
 
       <section className="right-panel">
-        <button className="mode-card emerald" onClick={() => setPresentation('solo')}>
-          <div className="card-inner" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
+        <button className="card-glow-emerald mode-card" onClick={() => setPresentation('solo')}>
+          <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
           <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. 800ms Auto-Next.</h2><div className="tags"><span>LIVE VOICE COMMENTARY</span><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
-        <button className="mode-card gold" onClick={() => setPresentation('community')}>
-          <div className="card-inner" /><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
+        <button className="card-glow-amber mode-card" onClick={() => setPresentation('community')}>
+          <div className="card-inner-surface" /><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
           <div className="mode-body"><div className="mode-icon gold-icon"><Icon name="trophy" /></div><div className="mode-copy"><h2>Take on the nation.</h2><p>Compete against state champions online!</p></div></div>
           <span className="action-button amber-action btn-shine">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
         </button>
