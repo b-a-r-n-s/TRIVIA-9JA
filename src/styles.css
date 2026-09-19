@@ -199,3 +199,80 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 @keyframes timerPulse{50%{transform:scale(1.03);box-shadow:0 0 18px rgba(244,63,94,.12)}}
 @media(max-width:520px){.solo-arena{padding:8px}.solo-arena .game-modal{max-height:calc(100svh - 16px);padding:13px;border-radius:20px}.solo-meta{font-size:6.5px;gap:6px}.solo-meta>b{font-size:7px}.solo-meta>strong{font-size:7px}.solo-host-line{margin-bottom:10px}.solo-question{padding-bottom:9px}.solo-question h1{font-size:21px}.solo-arena .answer-options button{min-height:49px}.solo-arena .answer-options button>em{font-size:9px}.answer-feedback p{font-size:7px}.result-modal{padding:22px 16px}.result-modal h1{font-size:25px}}
 @media(max-width:360px){.solo-arena .game-head{grid-template-columns:34px 1fr auto}.solo-arena .game-timer{padding:6px 7px;font-size:8px}.solo-meta{grid-template-columns:1fr auto}.solo-meta>strong{grid-column:2}.solo-host-line{grid-template-columns:32px 1fr 15px}.solo-host-line img{width:32px;height:32px}.solo-question h1{font-size:19px}.solo-arena .answer-options button{min-height:46px;padding:8px}.solo-arena .answer-options button>span{flex-basis:24px;width:24px;height:24px}.solo-footer .hint-row{gap:5px}}
+
+/* Solo arena final responsive pass: desktop has breathing room, mobile stays thumb-friendly. */
+.solo-arena{align-items:center}
+.solo-arena .game-modal{width:min(760px,100%);max-height:calc(100svh - 32px);padding:22px;border-radius:30px}
+.solo-arena .game-head{grid-template-columns:44px 1fr auto}
+.solo-arena .game-title{font-size:19px}
+.solo-arena .game-title em{font-size:19px}
+.solo-arena .game-progress{height:4px;margin:13px 0 15px}
+.solo-meta{font-size:8px}
+.solo-meta>b{font-size:9px}.solo-meta>strong{font-size:9px}
+.solo-host-line{padding:10px 12px;margin-bottom:17px}
+.solo-host-line img{width:42px;height:42px}
+.solo-host-line b{font-size:9px}.solo-host-line span{font-size:9px}
+.solo-question{padding:3px 2px 15px}
+.solo-question h1{font-size:clamp(25px,3.1vw,32px);max-width:680px}
+.solo-arena .answer-options{grid-template-columns:1fr 1fr;gap:9px}
+.solo-arena .answer-options button{min-height:60px;padding:11px 13px;border-radius:14px}
+.solo-arena .answer-options button>span{width:29px;height:29px}
+.solo-arena .answer-options button>em{font-size:11px}
+.answer-feedback{padding:11px 12px}.answer-feedback p{font-size:8px}
+.solo-footer{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:end}
+.solo-footer .hint-row{margin:0}
+.solo-footer .hint-row button{min-height:48px}
+.next-question{height:48px}
+.result-modal{width:min(560px,100%)!important}
+
+.light .solo-arena .game-modal{border-color:rgba(16,185,129,.24);box-shadow:0 30px 80px rgba(20,60,40,.15)}
+.light .solo-arena .game-progress{background:rgba(16,50,35,.08)}
+.light .solo-meta{color:#65736b}.light .solo-meta>b{color:#183028}
+.light .solo-host-line{border-color:rgba(16,185,129,.15);background:rgba(16,185,129,.035)}
+.light .solo-host-line span{color:#52645b}
+.light .question-meta span{color:#08784f}
+.light .solo-arena .answer-options button{border-color:rgba(16,50,35,.1);background:#fff;box-shadow:0 3px 12px rgba(20,50,35,.04)}
+.light .solo-arena .answer-options button:not(:disabled):hover{background:#f0f8f4}
+.light .solo-arena .answer-options button.selected{background:#e9f8f1;border-color:rgba(8,120,79,.4)}
+.light .solo-arena .answer-options button.correct{background:#dcf7e9;border-color:rgba(8,120,79,.45)}
+.light .solo-arena .answer-options button.wrong{background:#fff0f2;border-color:rgba(190,35,60,.35)}
+.light .answer-feedback{border-color:rgba(8,120,79,.18)}.light .answer-feedback p{color:#52645b}
+.light .solo-footer .hint-row button{background:#fff;border-color:rgba(16,50,35,.1);color:#30463c}
+.light .result-modal{color:#102019}.light .result-modal h1{color:#102019}
+
+@media(max-width:850px){
+  .solo-arena{padding:10px}
+  .solo-arena .game-modal{width:min(600px,100%);padding:17px;border-radius:25px}
+  .solo-arena .answer-options{grid-template-columns:1fr 1fr}
+  .solo-footer{grid-template-columns:1fr}
+  .solo-footer .hint-row{order:2}.next-question{order:1}
+}
+@media(max-width:520px){
+  .solo-arena{padding:7px}
+  .solo-arena .game-modal{max-height:calc(100svh - 14px);padding:13px;border-radius:21px}
+  .solo-arena .game-title,.solo-arena .game-title em{font-size:16px}
+  .solo-arena .game-progress{margin:10px 0 11px}
+  .solo-meta{margin-bottom:8px}
+  .solo-host-line{padding:7px 8px;margin-bottom:10px}
+  .solo-host-line img{width:34px;height:34px}
+  .solo-host-line b{font-size:7px}.solo-host-line span{font-size:7px}
+  .solo-question{padding-bottom:9px}
+  .solo-question h1{font-size:21px;line-height:1.16}
+  .solo-arena .answer-options{grid-template-columns:1fr;gap:6px}
+  .solo-arena .answer-options button{min-height:49px;padding:9px 10px;border-radius:12px}
+  .solo-arena .answer-options button>em{font-size:9px}
+  .answer-feedback{margin-top:8px;padding:9px}.answer-feedback p{font-size:7px}
+  .solo-footer{gap:6px;margin-top:8px}
+  .next-question{height:42px}
+}
+@media(max-width:360px){
+  .solo-arena .game-modal{padding:11px;border-radius:18px}
+  .solo-arena .game-head{grid-template-columns:34px 1fr auto}
+  .solo-arena .game-title,.solo-arena .game-title em{font-size:14px}
+  .solo-arena .game-timer{font-size:7px;padding:5px 6px}
+  .solo-meta{font-size:6px}.solo-meta>b,.solo-meta>strong{font-size:6.5px}
+  .solo-host-line img{width:30px;height:30px}
+  .solo-question h1{font-size:18px}
+  .solo-arena .answer-options button{min-height:45px}
+  .solo-arena .answer-options button>em{font-size:8px}
+}
