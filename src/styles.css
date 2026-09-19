@@ -45,8 +45,9 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .brand-area .host-wrap:after{content:"LIVE / 01   •   9JA TRIVIA   •   ARENA";position:absolute;left:50%;top:calc(25% - 18px);transform:translateX(-50%);width:100%;text-align:center;white-space:nowrap;color:rgba(148,161,154,.16);font-size:5px;font-weight:900;letter-spacing:.22em;pointer-events:none;z-index:-1}
 .brand-area>*{position:relative;z-index:1}
 .eyebrow-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;border:1px solid rgba(16,185,129,.25);background:rgba(16,185,129,.07);color:var(--green-hi);font-size:8px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
-.brand{margin:10px 0 12px;font-family:Inter,sans-serif;font-size:clamp(40px,4.5vw,64px);line-height:.9;letter-spacing:-.075em;font-weight:900;color:#f8fafc;text-shadow:0 3px 0 rgba(0,0,0,.22)}
-.brand em,.game-title em{font-family:Inter,sans-serif;font-style:normal;font-weight:900;color:var(--green-hi);letter-spacing:-.08em;display:inline-block;transform:none}
+.brand{margin:10px 0 12px;font-family:Inter,sans-serif;font-size:clamp(40px,4.5vw,64px);line-height:.9;letter-spacing:-.075em;font-weight:900;color:transparent;background:linear-gradient(90deg,#10b981 0%,#2dd4bf 52%,#fbbf24 100%);-webkit-background-clip:text;background-clip:text;text-shadow:none}
+.brand em{font:inherit;font-style:normal;color:inherit;letter-spacing:inherit;display:inline;transform:none}
+.game-title em{font-family:Inter,sans-serif;font-style:normal;font-weight:900;color:var(--green-hi);letter-spacing:-.08em;display:inline-block;transform:none}
 .host-wrap{width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center}
 .speech-card{position:relative;width:100%;padding:10px 12px;margin-bottom:10px;border:1px solid rgba(16,185,129,.34);border-radius:16px;background:rgba(3,16,10,.9);box-shadow:0 14px 28px rgba(0,0,0,.2)}
 .speech-card:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent,rgba(255,255,255,.035),transparent);transform:translateX(-100%);animation:shine 4.5s infinite}
