@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
@@ -98,19 +98,61 @@ function App() {
   const [displayName, setDisplayName] = useState('NaijaGenius_01')
   const [tagline, setTagline] = useState('Trivia King & Lagos Genius 👑')
   const isDark = theme === 'dark'
+  const selectedAvatarEmoji = selectedAvatarEmoji
 
-  if (presentation) return <PresentationScreen mode={presentation} language={language} onClose={() => setPresentation(null)} />
+  useEffect(() => {
+    window.history.replaceState(
+      { trivia9ja: true, modal: null, presentation: null },
+      '',
+      window.location.href
+    )
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state
+      if (state?.trivia9ja) {
+        setModal(state.modal ?? null)
+        setPresentation(state.presentation ?? null)
+      } else {
+        setModal(null)
+        setPresentation(null)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  const navigate = (nextModal: Modal = null, nextPresentation: GameMode | null = null) => {
+    window.history.pushState(
+      { trivia9ja: true, modal: nextModal, presentation: nextPresentation },
+      '',
+      window.location.href
+    )
+    setModal(nextModal)
+    setPresentation(nextPresentation)
+  }
+
+  const goBack = () => {
+    if (window.history.state?.trivia9ja) {
+      window.history.back()
+    } else {
+      setModal(null)
+      setPresentation(null)
+    }
+  }
+
+  if (presentation) return <PresentationScreen mode={presentation} language={language} onClose={goBack} />
 
   return <main className={'app ' + (isDark ? 'dark' : 'light')}>
     <div className="ambient ambient-green" /><div className="ambient ambient-amber" />
     <div className="workspace">
       <section className="left-panel">
         <header className="topbar">
-          <button className="icon-button" onClick={() => setModal('menu')}><Icon name="menu" /></button>
+          <button className="icon-button" onClick={() => navigate('menu')}><Icon name="menu" /></button>
           <div className="coin-display"><span>₦</span><b>500</b></div>
-          <button className="topup btn-shine" onClick={() => setModal('topup')}><Icon name="zap" /> TOP UP</button>
+          <button className="topup btn-shine" onClick={() => navigate('topup')}><Icon name="zap" /> TOP UP</button>
           <button className="icon-button amber" onClick={() => setTheme(isDark ? 'light' : 'dark')}><Icon name={isDark ? 'sun' : 'moon'} /></button>
-          <button className="avatar-button" onClick={() => setModal('profile')}>🦅</button>
+          <button className="avatar-button" onClick={() => navigate('profile')}>{selectedAvatarEmoji}</button>
         </header>
         <div className="brand-area">
           <div className="eyebrow-pill"><span>✦</span> OFFICIAL NIGERIAN TRIVIA</div>
@@ -124,32 +166,32 @@ function App() {
       </section>
 
       <section className="right-panel">
-        <button className="card-glow-emerald mode-card" onClick={() => setPresentation('solo')}>
+        <button className="card-glow-emerald mode-card" onClick={() => navigate(null, 'solo')}>
           <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
           <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. 800ms Auto-Next.</h2><div className="tags"><span>LIVE VOICE COMMENTARY</span><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
-        <button className="card-glow-amber mode-card" onClick={() => setPresentation('community')}>
+        <button className="card-glow-amber mode-card" onClick={() => navigate(null, 'community')}>
           <div className="card-inner-surface" /><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
           <div className="mode-body"><div className="mode-icon gold-icon"><Icon name="trophy" /></div><div className="mode-copy"><h2>Take on the nation.</h2><p>Compete against state champions online!</p></div></div>
           <span className="action-button amber-action btn-shine">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
         </button>
-        <button className="leaderboard-strip" onClick={() => setModal('leaderboard')}><span className="leader-icon"><Icon name="chart" /></span><span><b>LEADERBOARD</b><small>• Rank #NaijaGenius_01</small></span><Icon name="arrow" /></button>
+        <button className="leaderboard-strip" onClick={() => navigate('leaderboard')}><span className="leader-icon"><Icon name="chart" /></span><span><b>LEADERBOARD</b><small>• Rank #NaijaGenius_01</small></span><Icon name="arrow" /></button>
       </section>
     </div>
 
-    {modal === 'menu' && <Overlay title="Menu & Settings" onClose={() => setModal(null)}>
-      <button className="dialog-action" onClick={() => setModal('edit-profile')}><span><Icon name="edit" /> Edit Profile (DP & Name)</span><Icon name="arrow" /></button>
+    {modal === 'menu' && <Overlay title="Menu & Settings" onClose={goBack}>
+      <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> Edit Profile (DP & Name)</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => setTheme(isDark ? 'light' : 'dark')}><span><Icon name={isDark ? 'sun' : 'moon'} /> Theme Mode</span><b>{theme.toUpperCase()}</b></button>
       <button className="dialog-action" onClick={() => setVoice(v => !v)}><span><Icon name="mic" /> Quizmaster TTS Voice</span><b className={voice ? 'good' : 'bad'}>{voice ? 'ENABLED' : 'MUTED'}</b></button>
       <button className="dialog-action" onClick={() => setSound(v => !v)}><span><Icon name="volume" /> Sound FX</span><b className={sound ? 'good' : 'bad'}>{sound ? 'ON' : 'OFF'}</b></button>
-      <button className="dialog-action" onClick={() => setModal('leaderboard')}><span><Icon name="trophy" /> National Leaderboard</span><Icon name="arrow" /></button>
-      <button className="dialog-action" onClick={() => setModal('topup')}><span><Icon name="zap" /> Top Up Coins</span><Icon name="arrow" /></button>
+      <button className="dialog-action" onClick={() => navigate('leaderboard')}><span><Icon name="trophy" /> National Leaderboard</span><Icon name="arrow" /></button>
+      <button className="dialog-action" onClick={() => navigate('topup')}><span><Icon name="zap" /> Top Up Coins</span><Icon name="arrow" /></button>
     </Overlay>}
 
     {modal === 'profile' && <Overlay title="Your Profile" onClose={() => setModal(null)}>
       <div className="profile-header"><div className="profile-avatar">{avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'}</div><div><b>{displayName}</b><span>{tagline}</span><small>Lagos State 🇳🇬</small></div></div>
-      <button className="dialog-action" onClick={() => setModal('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
+      <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
     </Overlay>}
 
     {modal === 'edit-profile' && <Overlay title="Edit Your Profile" onClose={() => setModal(null)}>
@@ -157,7 +199,7 @@ function App() {
       <div className="avatar-grid">{avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-choice ' + (selectedAvatar === id ? 'active' : '')} onClick={() => setSelectedAvatar(id)}><span>{emoji}</span><small>{name}</small></button>)}</div>
       <label className="field-label">DISPLAY NAME</label><input className="profile-input" value={displayName} onChange={e => setDisplayName(e.target.value)} />
       <label className="field-label">BIO / TAGLINE</label><input className="profile-input" value={tagline} onChange={e => setTagline(e.target.value)} />
-      <button className="save-profile btn-shine" onClick={() => setModal('profile')}><span>✓</span> SAVE PROFILE EDITS</button>
+      <button className="save-profile btn-shine" onClick={() => navigate('profile')}><span>✓</span> SAVE PROFILE EDITS</button>
     </Overlay>}
 
     {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={() => setModal(null)}>
