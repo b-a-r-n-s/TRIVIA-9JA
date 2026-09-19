@@ -19,7 +19,7 @@
 *{box-sizing:border-box}
 html,body,#root{margin:0;min-width:320px;min-height:100%;background:var(--bg)}
 body{font-family:Inter,sans-serif;color:#f8fafc}
-button{font:inherit;touch-action:manipulation}
+button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button:focus-visible{outline:2px solid var(--green-hi);outline-offset:3px}
 svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .app{min-height:100svh;position:relative;overflow:hidden;background:radial-gradient(circle at 8% 92%,rgba(16,185,129,.06),transparent 28%),radial-gradient(circle at 94% 8%,rgba(245,158,11,.04),transparent 25%),var(--bg)}
