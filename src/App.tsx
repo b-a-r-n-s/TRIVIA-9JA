@@ -98,7 +98,7 @@ const soloQuestions: Record<Language, SoloQuestion[]> = {
   soloQuestions[language] = soloQuestions.English
 })
 
-function PresentationScreen({ language, onClose }: { mode: GameMode; language: Language; onClose: () => void }) {
+function PresentationScreen({ mode, language, onClose }: { mode: GameMode; language: Language; onClose: () => void }) {
   const questions = soloQuestions[language]
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
@@ -106,7 +106,7 @@ function PresentationScreen({ language, onClose }: { mode: GameMode; language: L
   const [hintUsed, setHintUsed] = useState(false)
   const [score, setScore] = useState(0)
   const [coins, setCoins] = useState(500)
-  const [secondsLeft, setSecondsLeft] = useState(120)
+  const [secondsLeft, setSecondsLeft] = useState(mode === 'community' ? 180 : 120)
   const [finished, setFinished] = useState(false)
 
   const question = questions[questionIndex]
@@ -189,6 +189,7 @@ function PresentationScreen({ language, onClose }: { mode: GameMode; language: L
 
   const formattedTime = \`${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}\`
   const progress = ((questionIndex + 1) / questions.length) * 100
+  const isSolo = mode === 'solo'
 
   return <div className="game-overlay solo-arena">
     <div className="game-modal">
@@ -199,7 +200,7 @@ function PresentationScreen({ language, onClose }: { mode: GameMode; language: L
       </div>
 
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
-      <div className="solo-meta"><span>SOLO MODE</span><b>QUESTION {questionIndex + 1}<i>/10</i></b><strong>₦ {coins}</strong></div>
+      <div className="solo-meta"><span>{isSolo ? 'SOLO MODE' : 'COMMUNITY PREVIEW'}</span><b>QUESTION {questionIndex + 1}<i>/10</i></b><strong>₦ {coins}</strong></div>
 
       <div className="solo-host-line">
         <img src={hosts[language].image} alt="" />
