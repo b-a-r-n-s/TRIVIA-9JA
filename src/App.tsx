@@ -76,27 +76,25 @@ type SoloQuestion = {
   explanation: string
 }
 
-const soloQuestions: Record<Language, SoloQuestion[]> = {
-  English: [
-    { id: 1, category: 'NIGERIA', question: 'Which city is known as the Centre of Excellence?', options: ['Lagos', 'Abuja', 'Ibadan', 'Kano'], answer: 0, explanation: 'Lagos State is popularly known as the Centre of Excellence.' },
-    { id: 2, category: 'AFRICA', question: 'Which is the largest country in Africa by land area?', options: ['Nigeria', 'Algeria', 'Egypt', 'DR Congo'], answer: 1, explanation: 'Algeria is Africa’s largest country by land area.' },
-    { id: 3, category: 'SCIENCE', question: 'What is the SI unit of electrical resistance?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'], answer: 2, explanation: 'Electrical resistance is measured in ohms (Ω).' },
-    { id: 4, category: 'NIGERIA', question: 'How many states make up Nigeria?', options: ['30', '36', '37', '40'], answer: 1, explanation: 'Nigeria has 36 states, plus the Federal Capital Territory.' },
-    { id: 5, category: 'HISTORY', question: 'Who was the first African woman to win a Nobel Prize?', options: ['Chimamanda Adichie', 'Ngozi Okonjo-Iweala', 'Funmilayo Ransome-Kuti', 'Wangari Maathai'], answer: 3, explanation: 'Wangari Maathai won the Nobel Peace Prize in 2004. She was Kenyan.' },
-    { id: 6, category: 'CULTURE', question: 'Which Nigerian language is predominantly spoken by the Yoruba people?', options: ['Igbo', 'Yorùbá', 'Hausa', 'Tiv'], answer: 1, explanation: 'Yorùbá is the principal language of the Yoruba people.' },
-    { id: 7, category: 'TECH', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Power Unit', 'Core Program Utility', 'Central Program User'], answer: 0, explanation: 'CPU means Central Processing Unit.' },
-    { id: 8, category: 'AFRICA', question: 'Which river is the longest in Africa?', options: ['Niger', 'Congo', 'Nile', 'Benue'], answer: 2, explanation: 'The Nile is generally recognized as Africa’s longest river.' },
-    { id: 9, category: 'RIDDLE', question: 'I have keys but no locks, and space but no room. What am I?', options: ['A map', 'A keyboard', 'A house', 'A piano'], answer: 1, explanation: 'A keyboard has keys and a space bar, but no locks or physical room.' },
-    { id: 10, category: 'NIGERIA', question: 'What is the capital of Nigeria?', options: ['Lagos', 'Kaduna', 'Abuja', 'Port Harcourt'], answer: 2, explanation: 'Abuja is Nigeria’s federal capital.' },
-  ],
-  Hausa: [],
-  Yorùbá: [],
-  Igbo: [],
-}
+const englishSoloQuestions: SoloQuestion[] = [
+  { id: 1, category: 'NIGERIA', question: 'Which city is known as the Centre of Excellence?', options: ['Lagos', 'Abuja', 'Ibadan', 'Kano'], answer: 0, explanation: 'Lagos State is popularly known as the Centre of Excellence.' },
+  { id: 2, category: 'AFRICA', question: 'Which is the largest country in Africa by land area?', options: ['Nigeria', 'Algeria', 'Egypt', 'DR Congo'], answer: 1, explanation: 'Algeria is Africa’s largest country by land area.' },
+  { id: 3, category: 'SCIENCE', question: 'What is the SI unit of electrical resistance?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'], answer: 2, explanation: 'Electrical resistance is measured in ohms (Ω).' },
+  { id: 4, category: 'NIGERIA', question: 'How many states make up Nigeria?', options: ['30', '36', '37', '40'], answer: 1, explanation: 'Nigeria has 36 states, plus the Federal Capital Territory.' },
+  { id: 5, category: 'HISTORY', question: 'Who was the first African woman to win a Nobel Prize?', options: ['Chimamanda Adichie', 'Ngozi Okonjo-Iweala', 'Funmilayo Ransome-Kuti', 'Wangari Maathai'], answer: 3, explanation: 'Wangari Maathai won the Nobel Peace Prize in 2004. She was Kenyan.' },
+  { id: 6, category: 'CULTURE', question: 'Which Nigerian language is predominantly spoken by the Yoruba people?', options: ['Igbo', 'Yorùbá', 'Hausa', 'Tiv'], answer: 1, explanation: 'Yorùbá is the principal language of the Yoruba people.' },
+  { id: 7, category: 'TECH', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Power Unit', 'Core Program Utility', 'Central Program User'], answer: 0, explanation: 'CPU means Central Processing Unit.' },
+  { id: 8, category: 'AFRICA', question: 'Which river is the longest in Africa?', options: ['Niger', 'Congo', 'Nile', 'Benue'], answer: 2, explanation: 'The Nile is generally recognized as Africa’s longest river.' },
+  { id: 9, category: 'RIDDLE', question: 'I have keys but no locks, and space but no room. What am I?', options: ['A map', 'A keyboard', 'A house', 'A piano'], answer: 1, explanation: 'A keyboard has keys and a space bar, but no locks or physical room.' },
+  { id: 10, category: 'NIGERIA', question: 'What is the capital of Nigeria?', options: ['Lagos', 'Kaduna', 'Abuja', 'Port Harcourt'], answer: 2, explanation: 'Abuja is Nigeria’s federal capital.' },
+]
 
-(languages.slice(1) as Language[]).forEach(language => {
-  soloQuestions[language] = soloQuestions.English
-})
+const soloQuestions: Record<Language, SoloQuestion[]> = {
+  English: englishSoloQuestions,
+  Hausa: englishSoloQuestions,
+  Yorùbá: englishSoloQuestions,
+  Igbo: englishSoloQuestions,
+}
 
 function PresentationScreen({ mode, language, onClose }: { mode: GameMode; language: Language; onClose: () => void }) {
   const questions = soloQuestions[language]
