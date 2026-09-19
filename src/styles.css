@@ -117,3 +117,64 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 @keyframes shineSweep{0%{transform:translateX(-140%) skewX(-20deg)}100%{transform:translateX(280%) skewX(-20deg)}}@keyframes voiceBounce{to{transform:scaleY(.45)}}@keyframes ping{75%,100%{transform:scale(1.8);opacity:0}}
 @media(max-width:850px){.workspace{width:100%;height:auto;min-height:100svh;margin:0;border:0;border-radius:0;display:flex;flex-direction:column}.left-panel{min-height:570px;padding:13px 14px 17px;border-right:0;border-bottom:1px solid rgba(16,185,129,.14)}.right-panel{padding:14px;min-height:590px}.topbar{grid-template-columns:38px 1fr auto 38px 38px}.icon-button,.avatar-button{width:38px;height:38px}.brand{font-size:42px}.host-wrap{max-width:290px}.portrait-frame{width:94px;height:94px}.mode-card{min-height:205px;padding:14px;border-radius:20px}.mode-body h2{font-size:18px}.mode-icon{width:56px;height:56px;border-radius:15px}.mode-icon svg{width:30px;height:30px}.action-button{height:36px}}
 @media(max-width:520px){.left-panel{min-height:500px}.right-panel{gap:9px}.brand{font-size:37px;margin:8px 0 10px}.eyebrow-pill{font-size:7px}.host-wrap{max-width:275px}.speech-card p{font-size:10px}.language{font-size:7px;padding:7px 2px}.mode-card{min-height:190px}.mode-body{gap:10px}.mode-body h2{font-size:16px}.mode-body p{font-size:8px}.mode-icon{width:50px;height:50px}.mode-icon svg{width:27px;height:27px}.tags span{font-size:5.5px}.answer-grid{grid-template-columns:1fr}.question-card h2{font-size:22px}.profile-stat-grid{grid-template-columns:1fr 1fr 1fr}.game-modal{padding:14px;border-radius:22px}.game-question{font-size:17px}.game-status{font-size:7px}.avatar-grid{gap:5px}.avatar-choice{padding:8px 2px}.dialog{padding:20px}.topup{padding:0 8px}}
+/* Mobile UX audit: keep the arena readable from 320px upward. */
+@media(max-width:850px){
+  .workspace{overflow:visible}
+  .left-panel{min-height:0;padding-bottom:18px}
+  .brand-area{flex:0 0 auto;min-height:410px;padding:24px 0 18px}
+  .language-area{padding-top:4px}
+  .right-panel{min-height:0;padding:12px 14px 18px}
+  .mode-card{flex:none;min-height:205px}
+  .leaderboard-strip{height:54px}
+}
+@media(max-width:520px){
+  .topbar{grid-template-columns:38px minmax(0,1fr) auto 38px 38px;gap:5px}
+  .coin-display{justify-self:end;padding:6px 8px}
+  .topup{height:29px;padding:0 8px}
+  .brand-area{min-height:390px;padding-top:18px}
+  .brand{font-size:clamp(34px,11vw,42px);letter-spacing:-.08em}
+  .host-wrap{max-width:min(275px,92vw)}
+  .portrait-frame{width:88px;height:88px}
+  .speech-card{padding:9px 10px}
+  .speech-card p{font-size:9.5px}
+  .language-label span{font-size:6.5px;letter-spacing:.1em}
+  .language-label button{font-size:6.5px}
+  .language-grid{gap:4px}
+  .language{min-height:34px}
+  .right-panel{padding:10px 12px 16px}
+  .mode-card{min-height:188px;padding:13px}
+  .mode-body{margin:18px 0}
+  .mode-body h2{font-size:15px;line-height:1.08}
+  .mode-body p{font-size:8px}
+  .mode-icon{width:48px;height:48px;border-radius:14px}
+  .mode-icon svg{width:25px;height:25px}
+  .card-top{font-size:7px}
+  .card-top b{font-size:6px;padding:4px 6px}
+  .action-button{height:35px;font-size:7px}
+  .leaderboard-strip{grid-template-columns:32px minmax(0,1fr) 16px;padding:0 9px}
+  .leaderboard-strip small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dialog{width:100%;max-height:calc(100svh - 28px);overflow:auto;padding:18px;border-radius:21px}
+  .dialog-heading h2{font-size:21px;margin-bottom:16px}
+  .avatar-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:360px){
+  .topbar{grid-template-columns:34px minmax(0,1fr) auto 34px 34px}
+  .icon-button,.avatar-button{width:34px;height:34px;border-radius:11px}
+  .coin-display{gap:5px;padding:5px 6px}
+  .coin-display b{font-size:10px}
+  .coin-display span{width:18px;height:18px}
+  .topup{font-size:8px;padding:0 6px}
+  .brand-area{min-height:375px}
+  .brand{font-size:34px}
+  .host-wrap{max-width:255px}
+  .portrait-frame{width:80px;height:80px}
+  .language-grid{grid-template-columns:repeat(2,1fr);gap:5px}
+  .language{padding:8px 4px}
+  .mode-card{min-height:180px}
+  .mode-body{gap:8px;margin:14px 0}
+  .mode-body h2{font-size:14px}
+  .mode-icon{width:44px;height:44px}
+  .tags{gap:3px}
+  .tags span{font-size:5px;padding:3px 5px}
+  .action-button{font-size:6.5px}
+}
