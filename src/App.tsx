@@ -189,12 +189,12 @@ function App() {
       <button className="dialog-action" onClick={() => navigate('topup')}><span><Icon name="zap" /> Top Up Coins</span><Icon name="arrow" /></button>
     </Overlay>}
 
-    {modal === 'profile' && <Overlay title="Your Profile" onClose={() => setModal(null)}>
-      <div className="profile-header"><div className="profile-avatar">{avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'}</div><div><b>{displayName}</b><span>{tagline}</span><small>Lagos State 🇳🇬</small></div></div>
+    {modal === 'profile' && <Overlay title="Your Profile" onClose={goBack}>
+      <div className="profile-header"><div className="profile-avatar">{selectedAvatarEmoji}</div><div><b>{displayName}</b><span>{tagline}</span><small>Lagos State 🇳🇬</small></div></div>
       <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
     </Overlay>}
 
-    {modal === 'edit-profile' && <Overlay title="Edit Your Profile" onClose={() => setModal(null)}>
+    {modal === 'edit-profile' && <Overlay title="Edit Your Profile" onClose={goBack}>
       <label className="field-label">SELECT DISPLAY AVATAR (DP)</label>
       <div className="avatar-grid">{avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-choice ' + (selectedAvatar === id ? 'active' : '')} onClick={() => setSelectedAvatar(id)}><span>{emoji}</span><small>{name}</small></button>)}</div>
       <label className="field-label">DISPLAY NAME</label><input className="profile-input" value={displayName} onChange={e => setDisplayName(e.target.value)} />
