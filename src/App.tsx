@@ -172,8 +172,8 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
         <p className="result-copy">You got <strong>{score}/10</strong> correct and finished with <strong>{percentage}%</strong>.</p>
         <div className="result-stats">
           <div><b>{score}</b><span>CORRECT</span></div>
-          <div><b>+{score}</b><span>🪙 EARNED</span></div>
-          <div><b>{coins}</b><span>🪙 BALANCE</span></div>
+          <div><b>+{score}</b><span><i className="coin-emoji">🪙</i> EARNED</span></div>
+          <div><b>{coins}</b><span><i className="coin-emoji">🪙</i> BALANCE</span></div>
         </div>
         <div className="result-actions">
           <button className="result-primary" onClick={() => {
@@ -198,7 +198,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       </div>
 
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
-      <div className="solo-meta"><span>{isSolo ? 'SOLO MODE' : 'COMMUNITY PREVIEW'}</span><b>QUESTION {questionIndex + 1}<i>/10</i></b><strong>🪙 {coins}</strong></div>
+      <div className="solo-meta"><span>{isSolo ? 'SOLO MODE' : 'COMMUNITY PREVIEW'}</span><b>QUESTION {questionIndex + 1}<i>/10</i></b><strong><i className="coin-emoji">🪙</i> {coins}</strong></div>
 
       <div className="solo-host-line">
         <img src={hosts[language].image} alt="" />
@@ -238,8 +238,8 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
 
       <div className="solo-footer">
         <div className="hint-row">
-          <button className={eliminated.length >= 2 || answered || coins < 1 ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small>🪙 1</small></button>
-          <button className={hintUsed || answered || coins < 2 ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small>🪙 2</small></button>
+          <button className={eliminated.length >= 2 || answered || coins < 1 ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji">🪙</i> 1</small></button>
+          <button className={hintUsed || answered || coins < 2 ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji">🪙</i> 2</small></button>
         </div>
         {answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}
       </div>
