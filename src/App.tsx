@@ -88,17 +88,25 @@ function PresentationScreen({ mode, language, onClose }: { mode: GameMode; langu
 }
 
 function App() {
-  const [language, setLanguage] = useState<Language>('English')
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('trivia9ja.language') as Language) || 'English')
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('trivia9ja.theme') as 'dark' | 'light') || 'dark')
   const [modal, setModal] = useState<Modal>(null)
   const [presentation, setPresentation] = useState<GameMode | null>(null)
   const [sound, setSound] = useState(true)
   const [voice, setVoice] = useState(true)
-  const [selectedAvatar, setSelectedAvatar] = useState('eagle')
-  const [displayName, setDisplayName] = useState('NaijaGenius_01')
-  const [tagline, setTagline] = useState('Trivia King & Lagos Genius 👑')
+  const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('trivia9ja.avatar') || 'eagle')
+  const [displayName, setDisplayName] = useState(() => localStorage.getItem('trivia9ja.displayName') || 'NaijaGenius_01')
+  const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || 'Trivia King & Lagos Genius 👑')
   const isDark = theme === 'dark'
   const selectedAvatarEmoji = avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'
+
+  useEffect(() => {
+    localStorage.setItem('trivia9ja.language', language)
+    localStorage.setItem('trivia9ja.theme', theme)
+    localStorage.setItem('trivia9ja.avatar', selectedAvatar)
+    localStorage.setItem('trivia9ja.displayName', displayName)
+    localStorage.setItem('trivia9ja.tagline', tagline)
+  }, [language, theme, selectedAvatar, displayName, tagline])
 
   useEffect(() => {
     window.history.replaceState(
@@ -190,7 +198,7 @@ function App() {
     </Overlay>}
 
     {modal === 'profile' && <Overlay title="Your Profile" onClose={goBack}>
-      <div className="profile-header"><div className="profile-avatar">{selectedAvatarEmoji}</div><div><b>{displayName}</b><span>{tagline}</span><small>Lagos State 🇳🇬</small></div></div>
+      <div className="profile-header"><div className="profile-avatar">{selectedAvatarEmoji}</div><div><b>{displayName}</b><span>{tagline}</span><small>Nigeria 🇳🇬</small></div></div>
       <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
     </Overlay>}
 
@@ -202,11 +210,11 @@ function App() {
       <button className="save-profile btn-shine" onClick={() => navigate('profile')}><span>✓</span> SAVE PROFILE EDITS</button>
     </Overlay>}
 
-    {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={() => setModal(null)}>
+    {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={goBack}>
       <div className="rank-list">{rankings.map(([name, avatar, state, score], i) => <div className="rank-row" key={name}><b>#{i + 1}</b><span>{avatar}</span><div><strong>{name}</strong><small>{state}</small></div><em>{score}</em></div>)}</div>
     </Overlay>}
 
-    {modal === 'topup' && <Overlay title="Top Up Coins" onClose={() => setModal(null)}>
+    {modal === 'topup' && <Overlay title="Top Up Coins" onClose={goBack}>
       <div className="topup-list">{[[200,'₦500'],[500,'₦1,200'],[1200,'₦2,500']].map(([coins, price]) => <button className="topup-pack" key={coins}><b>{coins} COINS</b><span>BUY {price}</span></button>)}</div>
     </Overlay>}
   </main>
