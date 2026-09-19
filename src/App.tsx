@@ -187,7 +187,7 @@ function PresentationScreen({ mode, language, onClose }: { mode: GameMode; langu
     </div>
   }
 
-  const formattedTime = \`${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}\`
+  const formattedTime = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`
   const progress = ((questionIndex + 1) / questions.length) * 100
   const isSolo = mode === 'solo'
 
@@ -196,7 +196,7 @@ function PresentationScreen({ mode, language, onClose }: { mode: GameMode; langu
       <div className="game-head">
         <button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button>
         <div className="game-title">TRIVIA <em>9JA</em></div>
-        <div className={\`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}\`}>◷ {formattedTime}</div>
+        <div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div>
       </div>
 
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
@@ -233,8 +233,8 @@ function PresentationScreen({ mode, language, onClose }: { mode: GameMode; langu
         })}
       </div>
 
-      {answered && <div className={\`answer-feedback ${correct ? 'positive' : 'negative'}\`}>
-        <div><b>{correct ? 'CORRECT' : 'NOT THIS TIME'}</b><span>{correct ? '+1 coin' : \`The answer was “${question.options[question.answer]}”.\`}</span></div>
+      {answered && <div className={`answer-feedback ${correct ? 'positive' : 'negative'}`}>
+        <div><b>{correct ? 'CORRECT' : 'NOT THIS TIME'}</b><span>{correct ? '+1 coin' : `The answer was “${question.options[question.answer]}”.`}</span></div>
         <p>{question.explanation}</p>
       </div>}
 
