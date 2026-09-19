@@ -313,3 +313,22 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .game-overlay.light .result-stats div{background:#f5f8f6;border-color:rgba(16,50,35,.1)}
 .game-overlay.light .result-secondary{background:#f4f8f5;color:#203028;border-color:rgba(8,120,79,.18)}
 .game-overlay.light .icon-button{background:#f4f8f6;border-color:rgba(16,50,35,.1);color:#52645b}
+
+
+/* Larger coin emoji for clear gameplay visibility */
+.coin-emoji{
+  font-style:normal;
+  display:inline-block;
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  font-size:1.55em;
+  line-height:0;
+  vertical-align:-.08em;
+}
+.solo-meta>strong .coin-emoji{font-size:1.7em;margin-right:2px}
+.solo-footer .hint-row small .coin-emoji{font-size:1.55em;margin-right:1px}
+.result-stats span .coin-emoji{font-size:1.7em;margin-right:2px}
+@media(max-width:520px){
+  .solo-meta>strong .coin-emoji{font-size:1.8em}
+  .solo-footer .hint-row small .coin-emoji{font-size:1.65em}
+  .result-stats span .coin-emoji{font-size:1.8em}
+}
