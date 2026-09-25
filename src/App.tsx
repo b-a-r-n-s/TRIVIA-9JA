@@ -30,7 +30,7 @@ function Icon({ name }: { name: string }) {
     menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" /></>,
     moon: <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z" />,
-    brain: <><path d="M9 4.5A3.5 3.5 0 0 0 5.5 8c0 .5.1 1 .3 1.4A3.5 3.5 0 0 0 7 16a3.5 3.5 0 0 0 6 2.5V5a3.5 3.5 0 0 0-4-.5Z" /><path d="M15 4.5A3.5 3.5 0 0 1 18.5 8c0 .5-.1 1-.3 1.4A3.5 3.5 0 0 1 17 16a3.5 3.5 0 0 1-6 2.5V5a3.5 3.5 0 0 1 4-.5Z" /></>,
+    brain: <><path d="M9 4.5A3.5 3.5 0 0 0 5.5 8c0 .5.1 1 .3 1.4A3.5 3.5 0 0 0 7 16a3.5 3.5 0 0 0 6 2.5V5a3.5 3.5 0 0 0-4-.5Z" /><path d="M15 4.5A3.5 3.5 0 0 1 18.5 8c0 .5-.1 1.4-.3 1.4A3.5 3.5 0 0 1 17 16a3.5 3.5 0 0 1-6 2.5V5a3.5 3.5 0 0 1 4-.5Z" /></>,
     trophy: <><path d="M7 4h10v6a5 5 0 0 1-10 0V4Z" /><path d="M7 6H3v2a5 5 0 0 0 5 5M17 6h4v2a5 5 0 0 1-5 5M12 15v5M8 20h8" /></>,
     globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.2 2.5 3.3 5.5 3.3 9S14.2 18.5 12 21c-2.2-2.5-3.3-5.5-3.3-9S9.8 5.5 12 3Z" /></>,
     arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
@@ -84,8 +84,7 @@ const languageCodes: Record<Language, 'en' | 'ha' | 'yo' | 'ig'> = {
   Igbo: 'ig',
 }
 
-function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
-  const isSolo = mode === 'solo'
+function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
   const level = 1
   const [questions, setQuestions] = useState<SoloQuestion[]>([])
   const [questionIndex, setQuestionIndex] = useState(0)
@@ -264,7 +263,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       <div className="solo-meta"><span>SOLO MODE · LEVEL {level}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji">🪙</i> {coins}</strong></div>
       <div className="solo-host-line"><img src={hosts[language].image} alt="" /><div><b>{hosts[language].name}</b><span>{answered ? 'Answer recorded.' : hosts[language].catchphrase}</span></div><Icon name={answered ? 'volume' : 'mic'} /></div>
       <div className="solo-question"><div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div><h1>{question.question}</h1>{clue && <p className="clue-text">Clue: {clue}</p>}</div>
-      <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (selectedAnswer === answer && correctAnswer === index ? 'correct ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
+      <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
       {answered && <div className="answer-feedback positive"><div><b>ANSWER RECORDED</b><span>Submitted securely.</span></div><p>{question.explanation ?? 'Keep going. Your answer has been checked by the game server.'}</p></div>}
       {error && <div className="answer-feedback negative"><div><b>ERROR</b><span>{error}</span></div></div>}
       <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji">🪙</i> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji">🪙</i> 2</small></button></div>{answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}</div>
