@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { supabase } from './lib/supabase'
+import { getNextQuestions, submitAnswer, useHint, finishSoloLevel } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
@@ -68,51 +70,73 @@ function Overlay({ title, children, onClose }: { title: string; children: ReactN
 }
 
 type SoloQuestion = {
-  id: number
+  id: string
   category: string
   question: string
   options: string[]
-  answer: number
-  explanation: string
+  explanation?: string | null
 }
 
-const englishSoloQuestions: SoloQuestion[] = [
-  { id: 1, category: 'NIGERIA', question: 'Which city is known as the Centre of Excellence?', options: ['Lagos', 'Abuja', 'Ibadan', 'Kano'], answer: 0, explanation: 'Lagos State is popularly known as the Centre of Excellence.' },
-  { id: 2, category: 'AFRICA', question: 'Which is the largest country in Africa by land area?', options: ['Nigeria', 'Algeria', 'Egypt', 'DR Congo'], answer: 1, explanation: 'Algeria is Africa’s largest country by land area.' },
-  { id: 3, category: 'SCIENCE', question: 'What is the SI unit of electrical resistance?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'], answer: 2, explanation: 'Electrical resistance is measured in ohms (Ω).' },
-  { id: 4, category: 'NIGERIA', question: 'How many states make up Nigeria?', options: ['30', '36', '37', '40'], answer: 1, explanation: 'Nigeria has 36 states, plus the Federal Capital Territory.' },
-  { id: 5, category: 'HISTORY', question: 'Who was the first African woman to win a Nobel Prize?', options: ['Chimamanda Adichie', 'Ngozi Okonjo-Iweala', 'Funmilayo Ransome-Kuti', 'Wangari Maathai'], answer: 3, explanation: 'Wangari Maathai won the Nobel Peace Prize in 2004. She was Kenyan.' },
-  { id: 6, category: 'CULTURE', question: 'Which Nigerian language is predominantly spoken by the Yoruba people?', options: ['Igbo', 'Yorùbá', 'Hausa', 'Tiv'], answer: 1, explanation: 'Yorùbá is the principal language of the Yoruba people.' },
-  { id: 7, category: 'TECH', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Power Unit', 'Core Program Utility', 'Central Program User'], answer: 0, explanation: 'CPU means Central Processing Unit.' },
-  { id: 8, category: 'AFRICA', question: 'Which river is the longest in Africa?', options: ['Niger', 'Congo', 'Nile', 'Benue'], answer: 2, explanation: 'The Nile is generally recognized as Africa’s longest river.' },
-  { id: 9, category: 'RIDDLE', question: 'I have keys but no locks, and space but no room. What am I?', options: ['A map', 'A keyboard', 'A house', 'A piano'], answer: 1, explanation: 'A keyboard has keys and a space bar, but no locks or physical room.' },
-  { id: 10, category: 'NIGERIA', question: 'What is the capital of Nigeria?', options: ['Lagos', 'Kaduna', 'Abuja', 'Port Harcourt'], answer: 2, explanation: 'Abuja is Nigeria’s federal capital.' },
-]
-
-const soloQuestions: Record<Language, SoloQuestion[]> = {
-  English: englishSoloQuestions,
-  Hausa: englishSoloQuestions,
-  Yorùbá: englishSoloQuestions,
-  Igbo: englishSoloQuestions,
+const languageCodes: Record<Language, 'en' | 'ha' | 'yo' | 'ig'> = {
+  English: 'en',
+  Hausa: 'ha',
+  'Yorùbá': 'yo',
+  Igbo: 'ig',
 }
 
 function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
-  const questions = soloQuestions[language]
+  const isSolo = mode === 'solo'
+  const level = 1
+  const [questions, setQuestions] = useState<SoloQuestion[]>([])
   const [questionIndex, setQuestionIndex] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [eliminated, setEliminated] = useState<number[]>([])
   const [hintUsed, setHintUsed] = useState(false)
+  const [clue, setClue] = useState<string | null>(null)
   const [score, setScore] = useState(0)
-  const [coins, setCoins] = useState(500)
-  const [secondsLeft, setSecondsLeft] = useState(mode === 'community' ? 180 : 120)
+  const [coins, setCoins] = useState(0)
+  const [secondsLeft, setSecondsLeft] = useState(120)
   const [finished, setFinished] = useState(false)
-
-  const question = questions[questionIndex]
-  const answered = selectedAnswer !== null
-  const correct = answered && selectedAnswer === question.answer
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (finished || answered) return
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          const { error: authError } = await supabase.auth.signInAnonymously()
+          if (authError) throw authError
+        }
+        const result = await getNextQuestions('solo', languageCodes[language], level, 10)
+        if (cancelled) return
+        setQuestions(result.questions.map((q: any) => ({
+          id: q.id,
+          category: String(q.metadata?.category ?? q.question_type ?? 'TRIVIA').toUpperCase(),
+          question: q.prompt,
+          options: Array.isArray(q.options) ? q.options.map(String) : [],
+          explanation: q.metadata?.explanation ?? null,
+        })))
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase.from('player_progress').select('coins').eq('user_id', user.id).maybeSingle()
+          if (!cancelled) setCoins(Number(profile?.coins ?? 0))
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not start the game.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [language])
+
+  useEffect(() => {
+    if (finished || loading || !!error || selectedAnswer !== null) return
     const timer = window.setInterval(() => {
       setSecondsLeft(seconds => {
         if (seconds <= 1) {
@@ -124,128 +148,130 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [finished, answered, questionIndex])
+  }, [finished, loading, error, selectedAnswer, questionIndex])
 
-  const chooseAnswer = (index: number) => {
-    if (answered || eliminated.includes(index)) return
-    setSelectedAnswer(index)
-    if (index === question.answer) {
-      setScore(value => value + 1)
-      setCoins(value => value + 1)
+  const question = questions[questionIndex]
+  const answered = selectedAnswer !== null
+
+  const chooseAnswer = async (index: number) => {
+    if (!question || answered || eliminated.includes(index) || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await submitAnswer({
+        question_id: question.id,
+        mode: 'solo',
+        level,
+        answer: question.options[index],
+        idempotency_key: crypto.randomUUID(),
+      })
+      setSelectedAnswer(question.options[index])
+      if (result.correct) setScore(value => value + 1)
+      if (result.coins_awarded) setCoins(value => value + result.coins_awarded)
+      if (result.explanation) setQuestions(value => value.map((q, i) => i === questionIndex ? { ...q, explanation: result.explanation } : q))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Answer could not be submitted.')
+    } finally {
+      setBusy(false)
     }
   }
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
+    if (!answered || busy) return
     if (questionIndex === questions.length - 1) {
-      setFinished(true)
+      setBusy(true)
+      try {
+        await finishSoloLevel(languageCodes[language], level)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not finish the level.')
+      } finally {
+        setBusy(false)
+        setFinished(true)
+      }
       return
     }
     setQuestionIndex(value => value + 1)
     setSelectedAnswer(null)
     setEliminated([])
     setHintUsed(false)
+    setClue(null)
   }
 
-  const useEliminate = () => {
-    if (answered || eliminated.length >= 2 || coins < 1) return
-    const candidates = question.options.map((_, index) => index).filter(index => index !== question.answer && !eliminated.includes(index))
-    const target = candidates[0]
-    if (target === undefined) return
-    setCoins(value => value - 1)
-    setEliminated(value => [...value, target])
+  const useEliminate = async () => {
+    if (!question || answered || eliminated.length >= 2 || busy) return
+    setBusy(true)
+    try {
+      const result = await useHint({
+        question_id: question.id, mode: 'solo', level,
+        hint_type: 'eliminate', idempotency_key: crypto.randomUUID(),
+      })
+      if (result.eliminated_option !== null && result.eliminated_option !== undefined) {
+        setEliminated(value => [...value, Number(result.eliminated_option)])
+      }
+      setCoins(result.coins_remaining)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Hint could not be used.')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  const useClue = () => {
-    if (answered || hintUsed || coins < 2) return
-    setCoins(value => value - 2)
-    setHintUsed(true)
+  const useClue = async () => {
+    if (!question || answered || hintUsed || busy) return
+    setBusy(true)
+    try {
+      const result = await useHint({
+        question_id: question.id, mode: 'solo', level,
+        hint_type: 'clue', idempotency_key: crypto.randomUUID(),
+      })
+      setHintUsed(true)
+      setClue(result.clue ?? null)
+      setCoins(result.coins_remaining)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Hint could not be used.')
+    } finally {
+      setBusy(false)
+    }
   }
+
+  if (loading) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">LOADING ROUND</div><div className="result-mark">…</div><h1>Preparing your questions.</h1><p className="result-copy">Connecting to the Trivia 9ja question pool.</p></div></div>
+
+  if (error && questions.length === 0) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">COULD NOT START</div><div className="result-mark">!</div><h1>Game unavailable.</h1><p className="result-copy">{error}</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
 
   if (finished) {
-    const percentage = Math.round((score / questions.length) * 100)
+    const percentage = Math.round((score / Math.max(questions.length, 1)) * 100)
     return <div className={'game-overlay ' + (isDark ? 'dark' : 'light')}>
       <div className="game-modal result-modal">
         <div className="result-kicker">ROUND COMPLETE</div>
         <div className="result-mark">✓</div>
         <p className="result-overline">SOLO · {language.toUpperCase()}</p>
-        <h1>{score === 10 ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
-        <p className="result-copy">You got <strong>{score}/10</strong> correct and finished with <strong>{percentage}%</strong>.</p>
-        <div className="result-stats">
-          <div><b>{score}</b><span>CORRECT</span></div>
-          <div><b>+{score}</b><span><i className="coin-emoji">🪙</i> EARNED</span></div>
-          <div><b>{coins}</b><span><i className="coin-emoji">🪙</i> BALANCE</span></div>
-        </div>
-        <div className="result-actions">
-          <button className="result-primary" onClick={() => {
-            setQuestionIndex(0); setSelectedAnswer(null); setEliminated([]); setHintUsed(false); setScore(0); setCoins(500); setSecondsLeft(120); setFinished(false)
-          }}>PLAY AGAIN <Icon name="arrow" /></button>
-          <button className="result-secondary" onClick={onClose}>BACK TO ARENA</button>
-        </div>
+        <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
+        <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
+        <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{score}</b><span><i className="coin-emoji">🪙</i> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji">🪙</i> BALANCE</span></div></div>
+        <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div>
       </div>
     </div>
   }
 
   const formattedTime = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`
-  const progress = ((questionIndex + 1) / questions.length) * 100
-  const isSolo = mode === 'solo'
+  const progress = ((questionIndex + 1) / Math.max(questions.length, 1)) * 100
+  const correctAnswer = answered ? null : null
 
   return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal">
-      <div className="game-head">
-        <button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button>
-        <div className="game-title">TRIVIA <em>9JA</em></div>
-        <div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div>
-      </div>
-
+      <div className="game-head"><button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div></div>
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
-      <div className="solo-meta"><span>{isSolo ? 'SOLO MODE' : 'COMMUNITY PREVIEW'}</span><b>QUESTION {questionIndex + 1}<i>/10</i></b><strong><i className="coin-emoji">🪙</i> {coins}</strong></div>
-
-      <div className="solo-host-line">
-        <img src={hosts[language].image} alt="" />
-        <div><b>{hosts[language].name}</b><span>{answered ? (correct ? 'That one is correct.' : 'Not quite. Stay sharp.') : hosts[language].catchphrase}</span></div>
-        <Icon name={answered ? 'volume' : 'mic'} />
-      </div>
-
-      <div className="solo-question">
-        <div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div>
-        <h1>{question.question}</h1>
-        {hintUsed && <p className="clue-text">Clue: think about the most widely accepted answer, not the closest-sounding option.</p>}
-      </div>
-
-      <div className="answer-options">
-        {question.options.map((answer, index) => {
-          const isSelected = selectedAnswer === index
-          const isCorrect = answered && index === question.answer
-          const isWrong = answered && isSelected && !isCorrect
-          const isEliminated = eliminated.includes(index)
-          return <button
-            key={answer}
-            className={(isSelected ? 'selected ' : '') + (isCorrect ? 'correct ' : '') + (isWrong ? 'wrong ' : '') + (isEliminated ? 'eliminated' : '')}
-            onClick={() => chooseAnswer(index)}
-            disabled={answered || isEliminated}
-          >
-            <span>{String.fromCharCode(65 + index)}</span>
-            <em>{answer}</em>
-            {isCorrect && <b>✓</b>}{isWrong && <b>×</b>}
-          </button>
-        })}
-      </div>
-
-      {answered && <div className={`answer-feedback ${correct ? 'positive' : 'negative'}`}>
-        <div><b>{correct ? 'CORRECT' : 'NOT THIS TIME'}</b><span>{correct ? '+1 coin' : `The answer was “${question.options[question.answer]}”.`}</span></div>
-        <p>{question.explanation}</p>
-      </div>}
-
-      <div className="solo-footer">
-        <div className="hint-row">
-          <button className={eliminated.length >= 2 || answered || coins < 1 ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji">🪙</i> 1</small></button>
-          <button className={hintUsed || answered || coins < 2 ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji">🪙</i> 2</small></button>
-        </div>
-        {answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}
-      </div>
+      <div className="solo-meta"><span>SOLO MODE · LEVEL {level}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji">🪙</i> {coins}</strong></div>
+      <div className="solo-host-line"><img src={hosts[language].image} alt="" /><div><b>{hosts[language].name}</b><span>{answered ? 'Answer recorded.' : hosts[language].catchphrase}</span></div><Icon name={answered ? 'volume' : 'mic'} /></div>
+      <div className="solo-question"><div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div><h1>{question.question}</h1>{clue && <p className="clue-text">Clue: {clue}</p>}</div>
+      <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (selectedAnswer === answer && correctAnswer === index ? 'correct ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
+      {answered && <div className="answer-feedback positive"><div><b>ANSWER RECORDED</b><span>Submitted securely.</span></div><p>{question.explanation ?? 'Keep going. Your answer has been checked by the game server.'}</p></div>}
+      {error && <div className="answer-feedback negative"><div><b>ERROR</b><span>{error}</span></div></div>}
+      <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji">🪙</i> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji">🪙</i> 2</small></button></div>{answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}</div>
     </div>
   </div>
 }
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('trivia9ja.language') as Language) || 'English')
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('trivia9ja.theme') as 'dark' | 'light') || 'dark')
