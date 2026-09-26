@@ -246,7 +246,7 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
         <p className="result-overline">SOLO · {language.toUpperCase()}</p>
         <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
         <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
-        <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{score}</b><span><i className="coin-emoji">🪙</i> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji">🪙</i> BALANCE</span></div></div>
+        <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{score}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
         <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div>
       </div>
     </div>
@@ -260,13 +260,13 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
     <div className="game-modal">
       <div className="game-head"><button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div></div>
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
-      <div className="solo-meta"><span>SOLO MODE · LEVEL {level}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji">🪙</i> {coins}</strong></div>
+      <div className="solo-meta"><span>SOLO MODE · LEVEL {level}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji" aria-label="coin" /> {coins}</strong></div>
       <div className="solo-host-line"><img src={hosts[language].image} alt="" /><div><b>{hosts[language].name}</b><span>{answered ? 'Answer recorded.' : hosts[language].catchphrase}</span></div><Icon name={answered ? 'volume' : 'mic'} /></div>
       <div className="solo-question"><div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div><h1>{question.question}</h1>{clue && <p className="clue-text">Clue: {clue}</p>}</div>
       <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
       {answered && <div className="answer-feedback positive"><div><b>ANSWER RECORDED</b><span>Submitted securely.</span></div><p>{question.explanation ?? 'Keep going. Your answer has been checked by the game server.'}</p></div>}
       {error && <div className="answer-feedback negative"><div><b>ERROR</b><span>{error}</span></div></div>}
-      <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji">🪙</i> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji">🪙</i> 2</small></button></div>{answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}</div>
+      <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji" aria-label="coin" /> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji" aria-label="coin" /> 2</small></button></div>{answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}</div>
     </div>
   </div>
 }
