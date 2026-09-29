@@ -254,7 +254,6 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
 
   const formattedTime = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`
   const progress = ((questionIndex + 1) / Math.max(questions.length, 1)) * 100
-  const correctAnswer = answered ? null : null
 
   return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal">
