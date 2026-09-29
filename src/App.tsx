@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
-import { getNextQuestions, submitAnswer, useHint, finishSoloLevel } from './lib/game'
+import { getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
@@ -84,8 +84,10 @@ const languageCodes: Record<Language, 'en' | 'ha' | 'yo' | 'ig'> = {
   Igbo: 'ig',
 }
 
-function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
-  const level = 1
+function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
+  const level = mode === 'solo' ? 1 : null
+  const isCommunity = mode === 'community'
+  const [attemptId, setAttemptId] = useState<string | null>(null)
   const [questions, setQuestions] = useState<SoloQuestion[]>([])
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
@@ -94,7 +96,7 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
   const [clue, setClue] = useState<string | null>(null)
   const [score, setScore] = useState(0)
   const [coins, setCoins] = useState(0)
-  const [secondsLeft, setSecondsLeft] = useState(120)
+  const [secondsLeft, setSecondsLeft] = useState(180)
   const [finished, setFinished] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -111,7 +113,16 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
           const { error: authError } = await supabase.auth.signInAnonymously()
           if (authError) throw authError
         }
-        const result = await getNextQuestions('solo', languageCodes[language], level, 10)
+        let communityAttemptId: string | null = null
+        if (isCommunity) {
+          const attempt = await startCommunityAttempt(languageCodes[language])
+          communityAttemptId = attempt.attempt.id
+          if (!cancelled) {
+            setAttemptId(communityAttemptId)
+            setCoins(attempt.coins)
+          }
+        }
+        const result = await getNextQuestions(mode, languageCodes[language], level, 10)
         if (cancelled) return
         setQuestions(result.questions.map((q: any) => ({
           id: q.id,
@@ -132,7 +143,7 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
       }
     })()
     return () => { cancelled = true }
-  }, [language])
+  }, [language, mode])
 
   useEffect(() => {
     if (finished || loading || !!error || selectedAnswer !== null) return
@@ -159,8 +170,9 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
     try {
       const result = await submitAnswer({
         question_id: question.id,
-        mode: 'solo',
+        mode,
         level,
+        ...(isCommunity && attemptId ? { attempt_id: attemptId } : {}),
         answer: question.options[index],
         idempotency_key: crypto.randomUUID(),
       })
@@ -180,7 +192,12 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
     if (questionIndex === questions.length - 1) {
       setBusy(true)
       try {
-        await finishSoloLevel(languageCodes[language], level)
+        if (isCommunity) {
+          if (!attemptId) throw new Error('Community attempt is missing.')
+          await finishCommunityAttempt(attemptId)
+        } else {
+          await finishSoloLevel(languageCodes[language], level as number)
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not finish the level.')
       } finally {
@@ -201,7 +218,8 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
     setBusy(true)
     try {
       const result = await useHint({
-        question_id: question.id, mode: 'solo', level,
+        question_id: question.id, mode, level,
+        ...(isCommunity && attemptId ? { attempt_id: attemptId } : {}),
         hint_type: 'eliminate', idempotency_key: crypto.randomUUID(),
       })
       if (result.eliminated_option !== null && result.eliminated_option !== undefined) {
@@ -220,7 +238,8 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
     setBusy(true)
     try {
       const result = await useHint({
-        question_id: question.id, mode: 'solo', level,
+        question_id: question.id, mode, level,
+        ...(isCommunity && attemptId ? { attempt_id: attemptId } : {}),
         hint_type: 'clue', idempotency_key: crypto.randomUUID(),
       })
       setHintUsed(true)
@@ -243,7 +262,7 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
       <div className="game-modal result-modal">
         <div className="result-kicker">ROUND COMPLETE</div>
         <div className="result-mark">✓</div>
-        <p className="result-overline">SOLO · {language.toUpperCase()}</p>
+        <p className="result-overline">{mode.toUpperCase()} · {language.toUpperCase()}</p>
         <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
         <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
         <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{score}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
@@ -257,9 +276,9 @@ function PresentationScreen({ language, isDark, onClose }: { mode: GameMode; lan
 
   return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal">
-      <div className="game-head"><button className="icon-button" aria-label="Exit solo game" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div></div>
+      <div className="game-head"><button className="icon-button" aria-label="Exit game" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div></div>
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
-      <div className="solo-meta"><span>SOLO MODE · LEVEL {level}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji" aria-label="coin" /> {coins}</strong></div>
+      <div className="solo-meta"><span>{isCommunity ? 'COMMUNITY CHALLENGE' : `SOLO MODE · LEVEL ${level}`}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji" aria-label="coin" /> {coins}</strong></div>
       <div className="solo-host-line"><img src={hosts[language].image} alt="" /><div><b>{hosts[language].name}</b><span>{answered ? 'Answer recorded.' : hosts[language].catchphrase}</span></div><Icon name={answered ? 'volume' : 'mic'} /></div>
       <div className="solo-question"><div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div><h1>{question.question}</h1>{clue && <p className="clue-text">Clue: {clue}</p>}</div>
       <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
@@ -358,7 +377,7 @@ function App() {
 
       <section className="right-panel">
         <button className="card-glow-emerald mode-card" onClick={() => navigate(null, 'solo')}>
-          <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
+          <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 3 MIN TIMER</b></div>
           <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. 800ms Auto-Next.</h2><div className="tags"><span>LIVE VOICE COMMENTARY</span><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
