@@ -347,3 +347,49 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
   .solo-footer .hint-row small .coin-emoji{font-size:1.4em}
   .result-stats span .coin-emoji{font-size:1.6em}
 }
+
+/* Desktop readability pass: gameplay is designed for a large screen, so secondary text should not be microscopic. */
+@media(min-width:851px){
+  .coin-display{padding:8px 13px;gap:8px}
+  .coin-display span{width:24px;height:24px;font-size:12px}
+  .coin-display b{font-size:15px}
+  .topup{height:34px;padding:0 12px;font-size:10px}
+  .topup svg{width:13px;height:13px}
+
+  .solo-arena .game-modal{padding:26px 30px}
+  .solo-arena .game-title,.solo-arena .game-title em{font-size:21px}
+  .solo-arena .game-timer{padding:9px 13px;font-size:12px}
+  .solo-arena .game-progress{height:5px;margin:15px 0 18px}
+  .solo-meta{font-size:12px;gap:14px;margin-bottom:13px}
+  .solo-meta>b,.solo-meta>strong{font-size:12px}
+  .solo-meta>strong .coin-emoji{font-size:1.55em}
+  .solo-host-line{grid-template-columns:46px 1fr 20px;padding:12px 14px;margin-bottom:20px}
+  .solo-host-line img{width:46px;height:46px}
+  .solo-host-line b{font-size:12px}
+  .solo-host-line span{font-size:11px}
+  .solo-host-line>.ui-icon{width:17px;height:17px}
+  .solo-question{padding-bottom:18px}
+  .question-meta{margin-bottom:10px}
+  .question-meta span{font-size:11px}
+  .question-meta b{font-size:9px}
+  .solo-question h1{font-size:clamp(32px,3.4vw,40px);line-height:1.12;max-width:700px}
+  .clue-text{font-size:10px;padding:10px 11px}
+  .solo-arena .answer-options{gap:11px}
+  .solo-arena .answer-options button{min-height:68px;padding:13px 15px;border-radius:15px}
+  .solo-arena .answer-options button>span{width:32px;height:32px}
+  .solo-arena .answer-options button>em{font-size:15px;line-height:1.3}
+  .answer-feedback{padding:13px 15px;margin-top:11px;gap:11px}
+  .answer-feedback b{font-size:8px}
+  .answer-feedback span{font-size:7.5px}
+  .answer-feedback p{font-size:10px}
+  .solo-footer{margin-top:12px}
+  .solo-footer .hint-row{gap:9px}
+  .solo-footer .hint-row button{min-height:58px;padding:9px 8px}
+  .solo-footer .hint-row span{font-size:11px}
+  .solo-footer .hint-row small{font-size:9px}
+  .solo-footer .hint-row small .coin-emoji{font-size:1.35em}
+  .result-modal h1{font-size:32px}
+  .result-copy{font-size:11px}
+  .result-stats b{font-size:18px}
+  .result-stats span{font-size:7px}
+}
