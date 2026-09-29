@@ -108,10 +108,17 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       setLoading(true)
       setError(null)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        let { data: { session } } = await supabase.auth.getSession()
         if (!session) {
-          const { error: authError } = await supabase.auth.signInAnonymously()
-          if (authError) throw authError
+          const { data: guest, error: guestError } = await supabase.functions.invoke('guest_session', { body: {} })
+          if (guestError) throw guestError
+          if (!guest?.access_token || !guest?.refresh_token) throw new Error(guest?.error ?? 'Could not start a guest session.')
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: guest.access_token,
+            refresh_token: guest.refresh_token,
+          })
+          if (sessionError || !sessionData.session) throw sessionError ?? new Error('Could not establish the guest session.')
+          session = sessionData.session
         }
         let communityAttemptId: string | null = null
         if (isCommunity) {
