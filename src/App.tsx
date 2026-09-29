@@ -170,6 +170,12 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   const question = questions[questionIndex]
   const answered = selectedAnswer !== null
 
+  useEffect(() => {
+    if (!answered || busy) return
+    const nextTimer = window.setTimeout(() => { void nextQuestion() }, 800)
+    return () => window.clearTimeout(nextTimer)
+  }, [answered, busy, questionIndex])
+
   const chooseAnswer = async (index: number) => {
     if (!question || answered || eliminated.includes(index) || busy) return
     setBusy(true)
@@ -291,7 +297,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
       {answered && <div className="answer-feedback positive"><div><b>ANSWER RECORDED</b><span>Submitted securely.</span></div><p>{question.explanation ?? 'Keep going. Your answer has been checked by the game server.'}</p></div>}
       {error && <div className="answer-feedback negative"><div><b>ERROR</b><span>{error}</span></div></div>}
-      <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji" aria-label="coin" /> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji" aria-label="coin" /> 2</small></button></div>{answered && <button className="next-question" onClick={nextQuestion}>{questionIndex === questions.length - 1 ? 'SEE RESULTS' : 'NEXT QUESTION'} <Icon name="arrow" /></button>}</div>
+      <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji" aria-label="coin" /> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji" aria-label="coin" /> 2</small></button></div></div>
     </div>
   </div>
 }
