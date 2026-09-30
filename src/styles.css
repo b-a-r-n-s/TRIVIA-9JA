@@ -396,13 +396,12 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 
 /* Answer-flow polish: immediate click feedback, brief result hold, then an animated advance. */
 .question-stage{animation:questionIn .18s ease both}
-.game-modal.is-advancing .question-stage{opacity:0;transform:translateY(-8px);transition:opacity .16s ease,transform .16s ease}
 .solo-arena .answer-options button.selected{border-color:rgba(245,158,11,.48);background:rgba(245,158,11,.08);box-shadow:0 0 0 1px rgba(245,158,11,.08)}
 .solo-arena .answer-options button.correct{border-color:rgba(52,211,153,.58);background:rgba(16,185,129,.15);box-shadow:0 0 0 1px rgba(52,211,153,.1)}
 .solo-arena .answer-options button.wrong{border-color:rgba(244,63,94,.55);background:rgba(244,63,94,.10);box-shadow:0 0 0 1px rgba(244,63,94,.08)}
 @keyframes questionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){
-  .question-stage,.game-modal.is-advancing .question-stage{animation:none;transition:none;transform:none;opacity:1}
+  .question-stage{animation:none}
 }
 
 /* Host removed from the current game build. */
