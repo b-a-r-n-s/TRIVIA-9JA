@@ -253,11 +253,13 @@ function PresentationScreen({
 
       await new Promise(resolve => window.setTimeout(resolve, 450))
       if (!isCommunity && questionIndex === questions.length - 1) {
-        await finishSoloLevel(languageCodes[language], level as number)
+        const completion = await finishSoloLevel(languageCodes[language], level as number)
+        setScore(completion.score)
         setFinished(true)
       } else if (isCommunity && questionIndex === questions.length - 1) {
         if (!attemptId) throw new Error('Community attempt is missing.')
-        await finishCommunityAttempt(attemptId)
+        const completion = await finishCommunityAttempt(attemptId)
+        setScore(completion.score)
         setFinished(true)
       } else {
         setQuestionIndex(value => value + 1)
