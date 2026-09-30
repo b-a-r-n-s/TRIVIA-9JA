@@ -596,17 +596,17 @@ function App() {
 
       <section className="right-panel">
         <button className="card-glow-emerald mode-card" onClick={() => navigate(null, { mode: 'solo' })}>
-          <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
+          <div className="card-inner-surface" /><span className="card-edge-trace emerald-trace" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1.5" y="1.5" width="97" height="97" rx="7" pathLength="1" /></svg></span><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
           <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. Auto-Advance.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
         <button className="card-glow-amber mode-card" onClick={() => navigate(null, { mode: 'community' })}>
-          <div className="card-inner-surface" /><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
+          <div className="card-inner-surface" /><span className="card-edge-trace amber-trace" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1.5" y="1.5" width="97" height="97" rx="7" pathLength="1" /></svg></span><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
           <div className="mode-body"><div className="mode-icon gold-icon"><Icon name="trophy" /></div><div className="mode-copy"><h2>Take on the nation.</h2><p>Compete against state champions online!</p></div></div>
           <span className="action-button amber-action btn-shine">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
         </button>
         <button className="card-glow-friend mode-card friend-card" onClick={() => navigate('friend-mode')}>
-          <div className="card-inner-surface" /><div className="card-top"><span>03 PLAY WITH A FRIEND</span><b className="friend-badge">PRIVATE</b></div>
+          <div className="card-inner-surface" /><span className="card-edge-trace friend-trace" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="1.5" y="1.5" width="97" height="97" rx="7" pathLength="1" /></svg></span><div className="card-top"><span>03 PLAY WITH A FRIEND</span><b className="friend-badge">PRIVATE</b></div>
           <div className="mode-body"><div className="mode-icon friend-icon"><Icon name="users" /></div><div className="mode-copy"><h2>Challenge someone you know.</h2><p>Create a private match or join one with a code.</p></div></div>
           <span className="action-button friend-action btn-shine">PLAY WITH A FRIEND <Icon name="arrow" /></span>
         </button>
