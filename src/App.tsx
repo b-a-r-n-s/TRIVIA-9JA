@@ -282,6 +282,7 @@ function PresentationScreen({
   const [coins, setCoins] = useState(initialCoins)
   const [secondsLeft, setSecondsLeft] = useState(isCommunity ? 180 : 120)
   const [finished, setFinished] = useState(false)
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -382,6 +383,7 @@ function PresentationScreen({
         const completion = await finishSoloLevel(languageCodes[language], level as number)
         setScore(completion.score)
         setFinished(true)
+        if (level === 1 && await isGuestUser()) setShowSavePrompt(true)
       } else if (isCommunity && questionIndex === questions.length - 1) {
         if (!attemptId) throw new Error('Community attempt is missing.')
         const completion = await finishCommunityAttempt(attemptId)
@@ -511,9 +513,14 @@ function PresentationScreen({
         <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
         <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
         <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{roundCoinsEarned}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
-        {!isCommunity && level === 1 && <button className="save-progress-link" onClick={async () => { if (await isGuestUser()) onClose(); }}> </button>}
         <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO {isCommunity ? 'ARENA' : 'LEVELS'}</button></div>
       </div>
+      {showSavePrompt && <AuthScreen
+        isDark={isDark}
+        intent="save"
+        onClose={() => setShowSavePrompt(false)}
+        onSuccess={() => setShowSavePrompt(false)}
+      />}
     </div>
   }
 
