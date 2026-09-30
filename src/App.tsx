@@ -239,6 +239,8 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
 
   if (error && questions.length === 0) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">COULD NOT START</div><div className="result-mark">!</div><h1>Game unavailable.</h1><p className="result-copy">{error}</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
 
+  if (!question) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">NO QUESTIONS AVAILABLE</div><div className="result-mark">?</div><h1>Round unavailable.</h1><p className="result-copy">There are no active questions available for this language and level right now.</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
+
   if (finished) {
     const percentage = Math.round((score / Math.max(questions.length, 1)) * 100)
     return <div className={'game-overlay ' + (isDark ? 'dark' : 'light')}>
