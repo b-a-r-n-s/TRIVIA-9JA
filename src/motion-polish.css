@@ -171,6 +171,11 @@
   from { opacity: 0; transform: translate3d(18px, 8px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
+@keyframes t9FriendIn {
+  from { opacity: 0; transform: translate3d(24px, 12px, 0) scale(.97); }
+  65% { opacity: 1; transform: translate3d(-2px, -1px, 0) scale(1.004); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
 @keyframes t9GlowBreath {
   0%,100% { box-shadow: 0 14px 38px rgba(0,0,0,.18), 0 0 0 rgba(26,164,110,0); }
   50% { box-shadow: 0 18px 46px rgba(0,0,0,.22), 0 0 28px rgba(26,164,110,.08); }
@@ -212,6 +217,20 @@
 }
 .workspace .mode-card:nth-child(1) { animation-delay: .12s; }
 .workspace .mode-card:nth-child(2) { animation-delay: .20s; }
+.workspace .friend-card {
+  animation-name: t9FriendIn;
+  animation-duration: .58s;
+  animation-delay: .29s;
+}
+.workspace .friend-card .friend-icon {
+  animation: t9SoftFloat 3.8s ease-in-out .9s infinite;
+}
+.workspace .friend-card .friend-action::after {
+  animation-delay: 2s;
+}
+.workspace .friend-card:hover .friend-icon {
+  transform: translateY(-3px) rotate(-2deg);
+}
 .workspace .mode-card:hover {
   transform: translateY(-5px);
 }
@@ -324,6 +343,7 @@
   .eyebrow-pill,
   .brand,
   .workspace .mode-card,
+  .workspace .friend-card,
   .workspace .leaderboard-strip,
   .left-panel .coin-display b,
   .play-language-card,
