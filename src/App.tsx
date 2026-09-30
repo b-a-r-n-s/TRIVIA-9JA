@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
-import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST } from './lib/game'
+import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST, isGuestUser, createAccountFromGuest, signInPlayer } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
-type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | 'friend-mode' | null
+type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | 'friend-mode' | 'auth' | null
 type GameMode = 'solo' | 'community'
 type PresentationState = { mode: GameMode; language?: Language; level?: number }
 
@@ -110,6 +110,73 @@ function LanguageSelectScreen({
           <Icon name="arrow" />
         </button>
       </div>
+    </div>
+  </div>
+}
+
+function AuthScreen({
+  isDark,
+  intent,
+  onClose,
+  onSuccess,
+}: {
+  isDark: boolean
+  intent: 'save' | 'competitive'
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [tab, setTab] = useState<'create' | 'signin'>(intent === 'save' ? 'create' : 'signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async () => {
+    if (!email.trim() || password.length < 6 || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      if (tab === 'create') {
+        await createAccountFromGuest(email, password)
+      } else {
+        await signInPlayer(email, password)
+      }
+      onSuccess()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tab === 'create' ? 'Could not create your account.' : 'Could not sign you in.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <div className={'game-overlay auth-screen ' + (isDark ? 'dark' : 'light')}>
+    <div className="game-modal auth-modal">
+      <button className="dialog-close" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
+      <div className="result-kicker">{intent === 'save' ? 'SAVE YOUR PROGRESS' : 'COMPETITIVE PLAY'}</div>
+      <h1>{intent === 'save' ? 'Keep your progress.' : 'Sign in to compete.'}</h1>
+      <p className="result-copy">
+        {intent === 'save'
+          ? 'Create a player account to keep your coins, levels and stats when you change browser or device.'
+          : 'Community and Friend modes require a player account. Your Solo guest progress stays separate unless you create an account from it.'}
+      </p>
+
+      <div className="auth-tabs">
+        <button className={tab === 'signin' ? 'active' : ''} onClick={() => { setTab('signin'); setError(null) }}>SIGN IN</button>
+        <button className={tab === 'create' ? 'active' : ''} onClick={() => { setTab('create'); setError(null) }}>CREATE ACCOUNT</button>
+      </div>
+
+      <label className="field-label">EMAIL</label>
+      <input className="profile-input auth-input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+      <label className="field-label">PASSWORD</label>
+      <input className="profile-input auth-input" type="password" autoComplete={tab === 'create' ? 'new-password' : 'current-password'} placeholder="Minimum 6 characters" value={password} onChange={e => setPassword(e.target.value)} />
+
+      {tab === 'signin' && intent === 'competitive' && <p className="auth-note">Already have an account? Sign in. New here? Create an account to keep the guest progress from this browser.</p>}
+      {tab === 'create' && intent === 'save' && <p className="auth-note">This upgrades the guest account you are already using. Your current Solo progress and coins stay with it.</p>}
+      {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
+
+      <button className="save-profile btn-shine auth-submit" disabled={busy || !email.trim() || password.length < 6} onClick={submit}>
+        {busy ? 'PLEASE WAIT…' : tab === 'create' ? 'CREATE ACCOUNT' : 'SIGN IN'}
+      </button>
     </div>
   </div>
 }
@@ -444,6 +511,7 @@ function PresentationScreen({
         <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
         <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
         <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{roundCoinsEarned}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
+        {!isCommunity && level === 1 && <button className="save-progress-link" onClick={async () => { if (await isGuestUser()) onClose(); }}> </button>}
         <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO {isCommunity ? 'ARENA' : 'LEVELS'}</button></div>
       </div>
     </div>
@@ -478,6 +546,7 @@ function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('trivia9ja.theme') as 'dark' | 'light') || 'dark')
   const [modal, setModal] = useState<Modal>(null)
   const [presentation, setPresentation] = useState<PresentationState | null>(null)
+  const [authDestination, setAuthDestination] = useState<'community' | 'friend' | null>(null)
   const [coins, setCoins] = useState(500)
   const [sound, setSound] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('trivia9ja.avatar') || 'eagle')
@@ -485,6 +554,22 @@ function App() {
   const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || 'Trivia King & Lagos Genius 👑')
   const isDark = theme === 'dark'
   const selectedAvatarEmoji = avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'
+
+  const openProtectedMode = async (destination: 'community' | 'friend') => {
+    try {
+      await ensurePlayerSession()
+      if (await isGuestUser()) {
+        setAuthDestination(destination)
+        navigate('auth')
+        return
+      }
+      if (destination === 'community') navigate(null, { mode: 'community' })
+      else navigate('friend-mode')
+    } catch (e) {
+      setAuthDestination(destination)
+      navigate('auth')
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -556,6 +641,21 @@ function App() {
     />
   }
 
+  if (modal === 'auth') {
+    return <AuthScreen
+      isDark={isDark}
+      intent="competitive"
+      onClose={() => { setAuthDestination(null); goBack() }}
+      onSuccess={() => {
+        const destination = authDestination
+        setAuthDestination(null)
+        if (destination === 'community') navigate(null, { mode: 'community' })
+        else if (destination === 'friend') navigate('friend-mode')
+        else goBack()
+      }}
+    />
+  }
+
   if (presentation?.mode === 'solo' && presentation.language && !presentation.level) {
     return <SoloLevelSelectScreen
       isDark={isDark}
@@ -600,12 +700,12 @@ function App() {
           <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. Auto-Advance.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
-        <button className="card-glow-amber mode-card" onClick={() => navigate(null, { mode: 'community' })}>
+        <button className="card-glow-amber mode-card" onClick={() => openProtectedMode('community')}>
           <div className="card-inner-surface" /><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
           <div className="mode-body"><div className="mode-icon gold-icon"><Icon name="trophy" /></div><div className="mode-copy"><h2>Take on the nation.</h2><p>Compete against state champions online!</p></div></div>
           <span className="action-button amber-action btn-shine">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
         </button>
-        <button className="card-glow-friend mode-card friend-card" onClick={() => navigate('friend-mode')}>
+        <button className="card-glow-friend mode-card friend-card" onClick={() => openProtectedMode('friend')}>
           <div className="card-inner-surface" /><div className="card-top"><span>03 PLAY WITH A FRIEND</span><b className="friend-badge">PRIVATE</b></div>
           <div className="mode-body"><div className="mode-icon friend-icon"><Icon name="users" /></div><div className="mode-copy"><h2>Challenge someone you know.</h2><p>Create a private match or join one with a code.</p></div></div>
           <span className="action-button friend-action btn-shine">PLAY WITH A FRIEND <Icon name="arrow" /></span>
