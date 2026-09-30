@@ -46,35 +46,32 @@ export type PlayerProgress = {
 async function createGuestSession(): Promise<Session> {
   const { data: guest, error: guestError } = await supabase.functions.invoke('guest_session', { body: {} })
 
-  if (!guestError && guest?.access_token && guest?.refresh_token) {
-    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-      access_token: guest.access_token,
-      refresh_token: guest.refresh_token,
-    })
-    if (!sessionError && sessionData.session) return sessionData.session
+  if (guestError) {
+    let message = guestError.message ?? 'Could not start a guest session.'
+    try {
+      const response = (guestError as any)?.context as Response | undefined
+      if (response) {
+        const payload = await response.clone().json()
+        message = payload?.error ?? message
+      }
+    } catch {}
+    throw new Error(message)
+  }
+
+  if (!guest?.access_token || !guest?.refresh_token) {
+    throw new Error(guest?.error ?? 'Could not start a guest session.')
+  }
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+    access_token: guest.access_token,
+    refresh_token: guest.refresh_token,
+  })
+
+  if (sessionError || !sessionData.session) {
     throw sessionError ?? new Error('Could not establish the guest session.')
   }
 
-  let guestMessage = guestError?.message ?? guest?.error ?? 'Guest session bootstrap failed.'
-  try {
-    const response = (guestError as any)?.context as Response | undefined
-    if (response) {
-      const payload = await response.clone().json()
-      guestMessage = payload?.error ?? guestMessage
-    }
-  } catch {}
-
-  try {
-    const { data: anonymous, error: anonymousError } = await supabase.auth.signInAnonymously({
-      options: { data: { guest: true, source: 'trivia9ja' } },
-    })
-    if (!anonymousError && anonymous.session) return anonymous.session
-
-    const anonymousMessage = anonymousError?.message ?? 'Anonymous sign-in failed.'
-    throw new Error(guestMessage + ' Also tried anonymous guest auth: ' + anonymousMessage)
-  } catch (error) {
-    throw error instanceof Error ? error : new Error(guestMessage)
-  }
+  return sessionData.session
 }
 
 export async function ensurePlayerSession() {
