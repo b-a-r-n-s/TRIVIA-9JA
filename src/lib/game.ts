@@ -1,4 +1,7 @@
 import { supabase } from './supabase'
+import type { Session } from '@supabase/supabase-js'
+
+let guestSessionPromise: Promise<Session> | null = null
 
 type LanguageCode = 'en' | 'ha' | 'yo' | 'ig'
 type Mode = 'solo' | 'community'
@@ -40,24 +43,51 @@ export type PlayerProgress = {
   total_answered: number
 }
 
-export async function ensurePlayerSession() {
-  let { data: { session } } = await supabase.auth.getSession()
-  if (session) return session
-
+async function createGuestSession(): Promise<Session> {
   const { data: guest, error: guestError } = await supabase.functions.invoke('guest_session', { body: {} })
-  if (guestError) throw guestError
-  if (!guest?.access_token || !guest?.refresh_token) {
-    throw new Error(guest?.error ?? 'Could not start a guest session.')
-  }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-    access_token: guest.access_token,
-    refresh_token: guest.refresh_token,
-  })
-  if (sessionError || !sessionData.session) {
+  if (!guestError && guest?.access_token && guest?.refresh_token) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      access_token: guest.access_token,
+      refresh_token: guest.refresh_token,
+    })
+    if (!sessionError && sessionData.session) return sessionData.session
     throw sessionError ?? new Error('Could not establish the guest session.')
   }
-  return sessionData.session
+
+  let guestMessage = guestError?.message ?? guest?.error ?? 'Guest session bootstrap failed.'
+  try {
+    const response = (guestError as any)?.context as Response | undefined
+    if (response) {
+      const payload = await response.clone().json()
+      guestMessage = payload?.error ?? guestMessage
+    }
+  } catch {}
+
+  try {
+    const { data: anonymous, error: anonymousError } = await supabase.auth.signInAnonymously({
+      options: { data: { guest: true, source: 'trivia9ja' } },
+    })
+    if (!anonymousError && anonymous.session) return anonymous.session
+
+    const anonymousMessage = anonymousError?.message ?? 'Anonymous sign-in failed.'
+    throw new Error(guestMessage + ' Also tried anonymous guest auth: ' + anonymousMessage)
+  } catch (error) {
+    throw error instanceof Error ? error : new Error(guestMessage)
+  }
+}
+
+export async function ensurePlayerSession() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) return session
+
+  if (!guestSessionPromise) {
+    guestSessionPromise = createGuestSession().finally(() => {
+      guestSessionPromise = null
+    })
+  }
+
+  return guestSessionPromise
 }
 
 export async function getPlayerProgress(): Promise<PlayerProgress> {
