@@ -72,7 +72,7 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 }
 .card-glow-emerald::before{
   content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
-  background:conic-gradient(transparent 25%,transparent 60%,#10b981 85%,#34d399 95%,#10b981 100%);
+  background:conic-gradient(#10b981 0deg,#34d399 9deg,transparent 24deg 60deg,#10b981 85deg,#34d399 95deg,#10b981 360deg);
   animation:borderSpin 6s linear infinite;z-index:-2;opacity:.75;
 }
 .card-glow-amber{
@@ -80,7 +80,7 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 }
 .card-glow-amber::before{
   content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
-  background:conic-gradient(transparent 25%,transparent 60%,#f59e0b 85%,#fbbf24 95%,#f59e0b 100%);
+  background:conic-gradient(#f59e0b 0deg,#fbbf24 9deg,transparent 24deg 60deg,#f59e0b 85deg,#fbbf24 95deg,#f59e0b 360deg);
   animation:borderSpinReverse 6s linear infinite;z-index:-2;opacity:.75;
 }
 .card-glow-friend{
@@ -88,7 +88,7 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 }
 .card-glow-friend::before{
   content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
-  background:conic-gradient(transparent 25%,transparent 60%,#64736b 84%,#b8c5be 94%,#64736b 100%);
+  background:conic-gradient(#64736b 0deg,#b8c5be 9deg,transparent 24deg 59deg,#64736b 84deg,#b8c5be 94deg,#64736b 360deg);
   animation:borderSpin 6s linear infinite;z-index:-2;opacity:.72;
 }
 .mode-card{
