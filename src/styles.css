@@ -46,6 +46,8 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .brand-area>*{position:relative;z-index:1}
 .eyebrow-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;border:1px solid rgba(16,185,129,.25);background:rgba(16,185,129,.07);color:var(--green-hi);font-size:8px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .brand{margin:10px 0 12px;font-family:Inter,sans-serif;font-size:clamp(40px,4.5vw,64px);line-height:.9;letter-spacing:-.075em;font-weight:900;color:transparent;background:linear-gradient(90deg,#10b981 0%,#2dd4bf 52%,#fbbf24 100%);-webkit-background-clip:text;background-clip:text;text-shadow:none}
+.brand-area .eyebrow-pill,
+.brand-area .brand{position:relative;top:-34px}
 .brand em{font:inherit;font-style:normal;color:inherit;letter-spacing:inherit;display:inline;transform:none}
 .game-title em{font-family:Inter,sans-serif;font-style:normal;font-weight:900;color:var(--green-hi);letter-spacing:-.08em;display:inline-block;transform:none}
 .host-wrap{width:100%;max-width:330px;display:flex;flex-direction:column;align-items:center}
@@ -132,6 +134,8 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
   .coin-display{justify-self:end;padding:6px 8px}
   .topup{height:29px;padding:0 8px}
   .brand-area{min-height:390px;padding-top:18px}
+  .brand-area .eyebrow-pill,
+  .brand-area .brand{top:-24px}
   .brand{font-size:clamp(34px,11vw,42px);letter-spacing:-.08em}
   .host-wrap{max-width:min(275px,92vw)}
   .portrait-frame{width:88px;height:88px}
