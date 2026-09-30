@@ -51,7 +51,6 @@ type SoloQuestion = {
   category: string
   question: string
   options: string[]
-  explanation?: string | null
 }
 
 const languageCodes: Record<Language, 'en' | 'ha' | 'yo' | 'ig'> = {
@@ -99,25 +98,26 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
           if (sessionError || !sessionData.session) throw sessionError ?? new Error('Could not establish the guest session.')
           session = sessionData.session
         }
+        const attemptPromise = isCommunity ? startCommunityAttempt(languageCodes[language]) : Promise.resolve(null)
+        const questionsPromise = getNextQuestions(mode, languageCodes[language], level, 10)
+        const [attempt, result] = await Promise.all([attemptPromise, questionsPromise])
+
         let communityAttemptId: string | null = null
-        if (isCommunity) {
-          const attempt = await startCommunityAttempt(languageCodes[language])
+        if (attempt) {
           communityAttemptId = attempt.attempt.id
           if (!cancelled) {
             setAttemptId(communityAttemptId)
             setCoins(attempt.coins)
           }
         }
-        const result = await getNextQuestions(mode, languageCodes[language], level, 10)
         if (cancelled) return
         setQuestions(result.questions.map((q: any) => ({
           id: q.id,
           category: String(q.metadata?.category ?? q.question_type ?? 'TRIVIA').toUpperCase(),
           question: q.prompt,
           options: Array.isArray(q.options) ? q.options.map(String) : [],
-          explanation: q.metadata?.explanation ?? null,
         })))
-        const { data: { user } } = await supabase.auth.getUser()
+        const user = session?.user
         if (user) {
           const { data: profile } = await supabase.from('player_progress').select('coins').eq('user_id', user.id).maybeSingle()
           if (!cancelled) setCoins(Number(profile?.coins ?? 0))
@@ -132,7 +132,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   }, [language, mode])
 
   useEffect(() => {
-    if (finished || loading || !!error || selectedAnswer !== null) return
+    if (finished || loading || !!error) return
     const timer = window.setInterval(() => {
       setSecondsLeft(seconds => {
         if (seconds <= 1) {
@@ -148,12 +148,6 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
 
   const question = questions[questionIndex]
   const answered = selectedAnswer !== null
-
-  useEffect(() => {
-    if (!answered || busy) return
-    const nextTimer = window.setTimeout(() => { void nextQuestion() }, 800)
-    return () => window.clearTimeout(nextTimer)
-  }, [answered, busy, questionIndex])
 
   const chooseAnswer = async (index: number) => {
     if (!question || answered || eliminated.includes(index) || busy) return
@@ -219,7 +213,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
 
   useEffect(() => {
     if (!answerResult || busy) return
-    const nextTimer = window.setTimeout(() => { void nextQuestion() }, 600)
+    const nextTimer = window.setTimeout(() => { void nextQuestion() }, 450)
     return () => window.clearTimeout(nextTimer)
   }, [answerResult, busy, questionIndex])
 
@@ -393,7 +387,7 @@ function App() {
       <section className="right-panel">
         <button className="card-glow-emerald mode-card" onClick={() => navigate(null, 'solo')}>
           <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
-          <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. 800ms Auto-Next.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
+          <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. Auto-Advance.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
         <button className="card-glow-amber mode-card" onClick={() => navigate(null, 'community')}>
