@@ -8,13 +8,6 @@ type GameMode = 'solo' | 'community'
 
 const languages: Language[] = ['English', 'Hausa', 'Yorùbá', 'Igbo']
 
-const hosts: Record<Language, { name: string; title: string; image: string; location: string; catchphrase: string }> = {
-  English: { name: 'Mr. Japer', title: 'Official Host & National Trivia Director', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop', location: 'Lagos, Nigeria', catchphrase: 'Sharp-sharp! Prove to Nigeria say your head sharp!' },
-  Hausa: { name: 'Mr. Ahmed', title: 'Kano Wisdom Scholar & TV Host', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop', location: 'Kano, Nigeria', catchphrase: 'Sannu ku da zuwa! Sani shine karfi!' },
-  Yorùbá: { name: 'Miss Temi', title: 'Ibadan Glamour & Culture Anchor', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop', location: 'Ibadan, Nigeria', catchphrase: 'Ẹ káàbọ̀ o! Ọpọlọ pẹpẹ l’ọ̀rọ̀ yìí!' },
-  Igbo: { name: 'Miss Chiamaka', title: 'Coal City Royal Intellect Anchor', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop', location: 'Enugu, Nigeria', catchphrase: 'Ndewonu! Amamihe na-enye ohere!' },
-}
-
 const avatars = [
   ['eagle', '🦅', 'Naija Eagle'], ['lion', '🦁', 'African Lion'], ['crown', '👑', 'Oba Crown'], ['fire', '🔥', 'Trivia Flame'],
   ['star', '⭐', 'Golden Star'], ['drum', '🪘', 'Talking Drum'], ['mask', '🎭', 'Cultural Mask'], ['gem', '💎', 'Naija Gem'],
@@ -38,26 +31,10 @@ function Icon({ name }: { name: string }) {
     user: <><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></>,
     chart: <><path d="M4 19V5M4 19h16" /><path d="M7 15v-4M11 15V7M15 15v-7M19 15V4" /></>,
     zap: <path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z" />,
-    mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" /></>,
     volume: <><path d="M4 10v4h3l4 3V7l-4 3H4Z" /><path d="M15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" /></>,
     edit: <><path d="m4 16-.8 4.8L8 20l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17Z" /><path d="m13.5 7.5 3 3" /></>,
   }
   return <svg className="ui-icon" viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
-}
-
-function HostCard({ language }: { language: Language }) {
-  const host = hosts[language]
-  return <div className="host-wrap">
-    <div className="speech-card">
-      <div className="host-name">{host.name} ({host.location}) <span className="voice-bars"><i /><i /><i /></span></div>
-      <p>“{host.catchphrase}”</p><span className="speech-tail" />
-    </div>
-    <div className="portrait-frame">
-      <img src={host.image} alt={host.name} />
-      <span className="live-chip">LIVE HOST</span><span className="live-dot"><i /> LIVE</span>
-    </div>
-    <div className="host-title"><strong>{host.name} <span>🇳🇬</span></strong><small>{host.title}</small></div>
-  </div>
 }
 
 function Overlay({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
@@ -91,12 +68,14 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   const [questions, setQuestions] = useState<SoloQuestion[]>([])
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string | null } | null>(null)
+  const [isAdvancing, setIsAdvancing] = useState(false)
   const [eliminated, setEliminated] = useState<number[]>([])
   const [hintUsed, setHintUsed] = useState(false)
   const [clue, setClue] = useState<string | null>(null)
   const [score, setScore] = useState(0)
   const [coins, setCoins] = useState(0)
-  const [secondsLeft, setSecondsLeft] = useState(180)
+  const [secondsLeft, setSecondsLeft] = useState(120)
   const [finished, setFinished] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -178,22 +157,29 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
 
   const chooseAnswer = async (index: number) => {
     if (!question || answered || eliminated.includes(index) || busy) return
-    setBusy(true)
+    const answer = question.options[index]
+    setSelectedAnswer(answer)
+    setAnswerResult(null)
     setError(null)
+    setBusy(true)
     try {
       const result = await submitAnswer({
         question_id: question.id,
         mode,
         level,
         ...(isCommunity && attemptId ? { attempt_id: attemptId } : {}),
-        answer: question.options[index],
+        answer,
         idempotency_key: crypto.randomUUID(),
       })
-      setSelectedAnswer(question.options[index])
+      setAnswerResult({
+        correct: result.correct,
+        correctAnswer: result.correct_answer ?? null,
+      })
       if (result.correct) setScore(value => value + 1)
       if (result.coins_awarded) setCoins(value => value + result.coins_awarded)
-      if (result.explanation) setQuestions(value => value.map((q, i) => i === questionIndex ? { ...q, explanation: result.explanation } : q))
     } catch (e) {
+      setSelectedAnswer(null)
+      setAnswerResult(null)
       setError(e instanceof Error ? e.message : 'Answer could not be submitted.')
     } finally {
       setBusy(false)
@@ -201,7 +187,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   }
 
   const nextQuestion = async () => {
-    if (!answered || busy) return
+    if (!answered || !answerResult || busy) return
     if (questionIndex === questions.length - 1) {
       setBusy(true)
       try {
@@ -219,12 +205,23 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       }
       return
     }
-    setQuestionIndex(value => value + 1)
-    setSelectedAnswer(null)
-    setEliminated([])
-    setHintUsed(false)
-    setClue(null)
+    setIsAdvancing(true)
+    window.setTimeout(() => {
+      setQuestionIndex(value => value + 1)
+      setSelectedAnswer(null)
+      setAnswerResult(null)
+      setEliminated([])
+      setHintUsed(false)
+      setClue(null)
+      setIsAdvancing(false)
+    }, 180)
   }
+
+  useEffect(() => {
+    if (!answerResult || busy) return
+    const nextTimer = window.setTimeout(() => { void nextQuestion() }, 600)
+    return () => window.clearTimeout(nextTimer)
+  }, [answerResult, busy, questionIndex])
 
   const useEliminate = async () => {
     if (!question || answered || eliminated.length >= 2 || busy) return
@@ -288,16 +285,23 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   const progress = ((questionIndex + 1) / Math.max(questions.length, 1)) * 100
 
   return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
-    <div className="game-modal">
+    <div className={'game-modal ' + (isAdvancing ? 'is-advancing' : '')}>
       <div className="game-head"><button className="icon-button" aria-label="Exit game" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div></div>
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
       <div className="solo-meta"><span>{isCommunity ? 'COMMUNITY CHALLENGE' : `SOLO MODE · LEVEL ${level}`}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji" aria-label="coin" /> {coins}</strong></div>
-      <div className="solo-host-line"><img src={hosts[language].image} alt="" /><div><b>{hosts[language].name}</b><span>{answered ? 'Answer recorded.' : hosts[language].catchphrase}</span></div><Icon name={answered ? 'volume' : 'mic'} /></div>
-      <div className="solo-question"><div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div><h1>{question.question}</h1>{clue && <p className="clue-text">Clue: {clue}</p>}</div>
-      <div className="answer-options">{question.options.map((answer, index) => <button key={answer} className={(selectedAnswer === answer ? 'selected ' : '') + (eliminated.includes(index) ? 'eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>)}</div>
-      {answered && <div className="answer-feedback positive"><div><b>ANSWER RECORDED</b><span>Submitted securely.</span></div><p>{question.explanation ?? 'Keep going. Your answer has been checked by the game server.'}</p></div>}
-      {error && <div className="answer-feedback negative"><div><b>ERROR</b><span>{error}</span></div></div>}
-      <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji" aria-label="coin" /> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji" aria-label="coin" /> 2</small></button></div></div>
+      <div key={questionIndex} className="question-stage">
+        <div className="solo-question"><div className="question-meta"><span>{question.category}</span>{hintUsed && <b>CLUE ACTIVE</b>}</div><h1>{question.question}</h1>{clue && <p className="clue-text">Clue: {clue}</p>}</div>
+        <div className="answer-options">{question.options.map((answer, index) => {
+          const state = answerResult
+            ? (answerResult.correctAnswer
+              ? (answer === answerResult.correctAnswer ? 'correct' : (selectedAnswer === answer ? 'wrong' : ''))
+              : (selectedAnswer === answer ? (answerResult.correct ? 'correct' : 'wrong') : ''))
+            : (selectedAnswer === answer ? 'selected' : '')
+          return <button key={answer} className={state + (eliminated.includes(index) ? ' eliminated' : '')} onClick={() => chooseAnswer(index)} disabled={answered || eliminated.includes(index) || busy}><span>{String.fromCharCode(65 + index)}</span><em>{answer}</em></button>
+        })}</div>
+        {error && <div className="answer-feedback negative"><div><b>ERROR</b><span>{error}</span></div></div>}
+        <div className="solo-footer"><div className="hint-row"><button className={answered || busy ? 'disabled' : ''} onClick={useEliminate}><b>−</b><span>ELIMINATE</span><small><i className="coin-emoji" aria-label="coin" /> 1</small></button><button className={hintUsed || answered || busy ? 'disabled' : ''} onClick={useClue}><b>?</b><span>CLUE</span><small><i className="coin-emoji" aria-label="coin" /> 2</small></button></div></div>
+      </div>
     </div>
   </div>
 }
@@ -308,7 +312,6 @@ function App() {
   const [modal, setModal] = useState<Modal>(null)
   const [presentation, setPresentation] = useState<GameMode | null>(null)
   const [sound, setSound] = useState(true)
-  const [voice, setVoice] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('trivia9ja.avatar') || 'eagle')
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('trivia9ja.displayName') || 'NaijaGenius_01')
   const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || 'Trivia King & Lagos Genius 👑')
@@ -380,18 +383,17 @@ function App() {
         <div className="brand-area">
           <div className="eyebrow-pill"><span>✦</span> OFFICIAL NIGERIAN TRIVIA</div>
           <h1 className="brand">TRIVIA <em>9JA</em></h1>
-          <HostCard language={language} />
         </div>
         <div className="language-area">
-          <div className="language-label"><span><Icon name="globe" /> ACTIVE QUIZMASTER HOST</span><button onClick={() => setVoice(v => !v)}><Icon name="mic" /> {voice ? 'Test Voice' : 'Voice Off'}</button></div>
+          <div className="language-label"><span><Icon name="globe" /> SELECT QUIZ LANGUAGE</span></div>
           <div className="language-grid">{languages.map(lang => <button key={lang} className={'language ' + (lang === language ? 'active' : '')} onClick={() => setLanguage(lang)}>{lang}</button>)}</div>
         </div>
       </section>
 
       <section className="right-panel">
         <button className="card-glow-emerald mode-card" onClick={() => navigate(null, 'solo')}>
-          <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 3 MIN TIMER</b></div>
-          <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. 800ms Auto-Next.</h2><div className="tags"><span>LIVE VOICE COMMENTARY</span><span className="gold">₦ EARN COINS</span></div></div></div>
+          <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
+          <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. 800ms Auto-Next.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
         <button className="card-glow-amber mode-card" onClick={() => navigate(null, 'community')}>
@@ -406,7 +408,6 @@ function App() {
     {modal === 'menu' && <Overlay title="Menu & Settings" onClose={goBack}>
       <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> Edit Profile (DP & Name)</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => setTheme(isDark ? 'light' : 'dark')}><span><Icon name={isDark ? 'sun' : 'moon'} /> Theme Mode</span><b>{theme.toUpperCase()}</b></button>
-      <button className="dialog-action" onClick={() => setVoice(v => !v)}><span><Icon name="mic" /> Quizmaster TTS Voice</span><b className={voice ? 'good' : 'bad'}>{voice ? 'ENABLED' : 'MUTED'}</b></button>
       <button className="dialog-action" onClick={() => setSound(v => !v)}><span><Icon name="volume" /> Sound FX</span><b className={sound ? 'good' : 'bad'}>{sound ? 'ON' : 'OFF'}</b></button>
       <button className="dialog-action" onClick={() => navigate('leaderboard')}><span><Icon name="trophy" /> National Leaderboard</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => navigate('topup')}><span><Icon name="zap" /> Top Up Coins</span><Icon name="arrow" /></button>
