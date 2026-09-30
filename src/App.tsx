@@ -157,6 +157,7 @@ function PresentationScreen({
   const [hintUsed, setHintUsed] = useState(false)
   const [clue, setClue] = useState<string | null>(null)
   const [score, setScore] = useState(0)
+  const [roundCoinsEarned, setRoundCoinsEarned] = useState(0)
   const [coins, setCoins] = useState(initialCoins)
   const [secondsLeft, setSecondsLeft] = useState(isCommunity ? 180 : 120)
   const [finished, setFinished] = useState(false)
@@ -191,6 +192,7 @@ function PresentationScreen({
           updateCoins(attempt.coins)
         } else {
           updateCoins(progress?.coins ?? initialCoins)
+          setRoundCoinsEarned(0)
         }
 
         setQuestions(result.questions.map((q: any) => ({
@@ -249,7 +251,10 @@ function PresentationScreen({
         correctAnswer: result.correct_answer ?? null,
       })
       if (result.correct) setScore(value => value + 1)
-      if (result.coins_awarded) updateCoins(value => value + result.coins_awarded)
+      if (result.coins_awarded) {
+        updateCoins(value => value + result.coins_awarded)
+        setRoundCoinsEarned(value => value + result.coins_awarded)
+      }
 
       await new Promise(resolve => window.setTimeout(resolve, 450))
       if (!isCommunity && questionIndex === questions.length - 1) {
@@ -300,6 +305,7 @@ function PresentationScreen({
       setHintUsed(false)
       setClue(null)
       setScore(0)
+      setRoundCoinsEarned(0)
       setSecondsLeft(120)
       setFinished(false)
     } catch (e) {
@@ -383,7 +389,7 @@ function PresentationScreen({
         <p className="result-overline">{mode.toUpperCase()} · {language.toUpperCase()}</p>
         <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
         <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
-        <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{score}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
+        <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{roundCoinsEarned}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
         <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO {isCommunity ? 'ARENA' : 'LEVELS'}</button></div>
       </div>
     </div>
