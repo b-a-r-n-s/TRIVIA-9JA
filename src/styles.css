@@ -406,3 +406,61 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 
 /* Host removed from the current game build. */
 .solo-host-line{display:none}
+
+/* Solo progression and gameplay controls */
+.coin-display .coin-emoji{font-size:1.5em;flex:0 0 auto}
+.level-select-modal{width:min(760px,100%)!important}
+.level-select-heading{padding:18px 2px 12px}
+.level-select-heading h1{margin:5px 0 5px;color:#f8fafc;font-size:clamp(28px,4vw,40px);letter-spacing:-.05em}
+.level-select-heading p{margin:0;max-width:580px;color:#89968f;font-size:11px;line-height:1.5}
+.level-coins{display:flex;align-items:center;gap:6px;padding:8px 11px;border:1px solid rgba(245,158,11,.22);border-radius:999px;background:rgba(245,158,11,.08);color:var(--amber-hi);font-size:12px;font-weight:900}
+.level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.level-card{position:relative;min-height:94px;padding:12px;border:1px solid rgba(16,185,129,.14);border-radius:16px;background:rgba(0,0,0,.22);color:#fff;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;text-align:left;cursor:pointer;transition:.18s ease}
+.level-card.current{border-color:rgba(16,185,129,.45);background:rgba(16,185,129,.08);box-shadow:0 10px 28px rgba(16,185,129,.07)}
+.level-card.current:hover{transform:translateY(-2px);border-color:rgba(52,211,153,.68);background:rgba(16,185,129,.12)}
+.level-card.completed{opacity:.62}
+.level-card.locked{opacity:.34;cursor:not-allowed}
+.level-number{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.06);color:#9aa69f;font-size:15px;font-weight:900}
+.level-card.current .level-number{background:var(--green);color:#02120b}
+.level-card.completed .level-number{background:rgba(16,185,129,.16);color:var(--green-hi)}
+.level-copy{min-width:0}
+.level-copy b{display:block;font-size:10px;font-weight:900}
+.level-copy small{display:block;margin-top:4px;color:#6f7d75;font-size:7px;font-weight:900;letter-spacing:.08em}
+.level-card.current .level-copy small{color:var(--green-hi)}
+.level-status{color:#65726b;font-size:15px;font-weight:900}
+.level-card.current .level-status{color:var(--green-hi)}
+.level-card.completed .level-status{color:var(--green)}
+.solo-footer{display:flex;justify-content:flex-end;align-items:end}
+.solo-footer .hint-row{width:max-content;display:flex;gap:9px;margin-left:auto}
+.solo-footer .hint-row button{min-width:145px}
+
+.game-overlay.light .level-select-heading h1{color:#102019}
+.game-overlay.light .level-select-heading p{color:#607069}
+.game-overlay.light .level-card{background:#f5f8f6;border-color:rgba(16,50,35,.1);color:#203028}
+.game-overlay.light .level-card.current{background:#e9f8f1;border-color:rgba(8,120,79,.34)}
+.game-overlay.light .level-number{background:rgba(16,50,35,.06);color:#65736b}
+.game-overlay.light .level-card.current .level-number{background:#10b981;color:#02120b}
+.game-overlay.light .level-copy small{color:#718078}
+
+@media(max-width:850px){
+  .level-select-modal{width:min(600px,100%)!important}
+  .level-grid{grid-template-columns:repeat(2,1fr)}
+  .level-select-heading h1{font-size:30px}
+  .level-card{min-height:82px}
+  .solo-footer .hint-row{width:100%;justify-content:flex-end}
+  .solo-footer .hint-row button{min-width:136px}
+}
+@media(max-width:520px){
+  .level-grid{grid-template-columns:1fr 1fr;gap:7px}
+  .level-card{min-height:76px;padding:9px;grid-template-columns:auto 1fr auto;gap:7px}
+  .level-number{width:34px;height:34px;border-radius:10px;font-size:13px}
+  .level-copy b{font-size:8px}
+  .level-copy small{font-size:6px}
+  .level-status{font-size:12px}
+  .level-select-heading{padding-top:12px}
+  .level-select-heading h1{font-size:25px}
+  .level-select-heading p{font-size:9px}
+  .level-coins{font-size:9px;padding:6px 8px}
+  .solo-footer .hint-row{gap:6px}
+  .solo-footer .hint-row button{min-width:0;flex:1}
+}
