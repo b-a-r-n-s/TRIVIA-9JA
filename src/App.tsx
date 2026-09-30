@@ -5,7 +5,7 @@ import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer,
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
 type GameMode = 'solo' | 'community'
-type PresentationState = { mode: GameMode; level?: number }
+type PresentationState = { mode: GameMode; language?: Language; level?: number }
 
 const languages: Language[] = ['English', 'Hausa', 'Yorùbá', 'Igbo']
 
@@ -61,6 +61,58 @@ const languageCodes: Record<Language, 'en' | 'ha' | 'yo' | 'ig'> = {
   Igbo: 'ig',
 }
 
+function LanguageSelectScreen({
+  isDark,
+  mode,
+  onClose,
+  onStart,
+}: {
+  isDark: boolean
+  mode: GameMode
+  onClose: () => void
+  onStart: (language: Language) => void
+}) {
+  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null)
+
+  return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
+    <div className="game-modal language-select-modal">
+      <div className="game-head">
+        <button className="icon-button" aria-label="Back to arena" onClick={onClose}><Icon name="x" /></button>
+        <div className="game-title">TRIVIA <em>9JA</em></div>
+        <div className="language-step">1 / 1</div>
+      </div>
+
+      <div className="language-select-heading">
+        <div className="result-kicker">{mode === 'solo' ? 'SOLO MODE' : 'COMMUNITY CHALLENGE'}</div>
+        <h1>Choose your language.</h1>
+        <p>Your questions will stay in this language for the entire game.</p>
+      </div>
+
+      <div className="play-language-grid">
+        {languages.map(lang => (
+          <button
+            key={lang}
+            className={'play-language-card ' + (selectedLanguage === lang ? 'selected' : '')}
+            onClick={() => setSelectedLanguage(lang)}
+            aria-pressed={selectedLanguage === lang}
+          >
+            <span className="play-language-mark">{languageCodes[lang].toUpperCase()}</span>
+            <span><b>{lang}</b><small>Play in {lang}</small></span>
+            <i>{selectedLanguage === lang ? '✓' : '→'}</i>
+          </button>
+        ))}
+      </div>
+
+      <div className="language-select-actions">
+        <button className="result-primary" disabled={!selectedLanguage} onClick={() => selectedLanguage && onStart(selectedLanguage)}>
+          CONTINUE TO {mode === 'solo' ? 'LEVELS' : 'GAME'}
+          <Icon name="arrow" />
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 function SoloLevelSelectScreen({
   isDark,
   onClose,
@@ -103,6 +155,7 @@ function SoloLevelSelectScreen({
 
   return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal level-select-modal">
+
       <div className="game-head"><button className="icon-button" aria-label="Back to arena" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className="level-coins"><i className="coin-emoji" aria-label="coin" /> {coins}</div></div>
       <div className="level-select-heading">
         <div className="result-kicker">SOLO MODE</div>
@@ -421,7 +474,6 @@ function PresentationScreen({
 }
 
 function App() {
-  const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('trivia9ja.language') as Language) || 'English')
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('trivia9ja.theme') as 'dark' | 'light') || 'dark')
   const [modal, setModal] = useState<Modal>(null)
   const [presentation, setPresentation] = useState<PresentationState | null>(null)
@@ -447,12 +499,11 @@ function App() {
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('trivia9ja.language', language)
     localStorage.setItem('trivia9ja.theme', theme)
     localStorage.setItem('trivia9ja.avatar', selectedAvatar)
     localStorage.setItem('trivia9ja.displayName', displayName)
     localStorage.setItem('trivia9ja.tagline', tagline)
-  }, [language, theme, selectedAvatar, displayName, tagline])
+  }, [theme, selectedAvatar, displayName, tagline])
 
   useEffect(() => {
     window.history.replaceState(
@@ -495,12 +546,34 @@ function App() {
     }
   }
 
-  if (presentation?.mode === 'solo' && !presentation.level) {
-    return <SoloLevelSelectScreen isDark={isDark} onClose={goBack} onStart={level => navigate(null, { mode: 'solo', level })} onCoinsChange={setCoins} />
+  if (presentation && !presentation.language) {
+    return <LanguageSelectScreen
+      isDark={isDark}
+      mode={presentation.mode}
+      onClose={goBack}
+      onStart={language => navigate(null, { ...presentation, language })}
+    />
   }
 
-  if (presentation) {
-    return <PresentationScreen mode={presentation.mode} level={presentation.level ?? null} language={language} isDark={isDark} onClose={goBack} initialCoins={coins} onCoinsChange={setCoins} />
+  if (presentation?.mode === 'solo' && presentation.language && !presentation.level) {
+    return <SoloLevelSelectScreen
+      isDark={isDark}
+      onClose={goBack}
+      onStart={level => navigate(null, { ...presentation, level })}
+      onCoinsChange={setCoins}
+    />
+  }
+
+  if (presentation?.language) {
+    return <PresentationScreen
+      mode={presentation.mode}
+      level={presentation.level ?? null}
+      language={presentation.language}
+      isDark={isDark}
+      onClose={goBack}
+      initialCoins={coins}
+      onCoinsChange={setCoins}
+    />
   }
 
   return <main className={'app ' + (isDark ? 'dark' : 'light')}>
@@ -517,10 +590,6 @@ function App() {
         <div className="brand-area">
           <div className="eyebrow-pill"><span>✦</span> OFFICIAL NIGERIAN TRIVIA</div>
           <h1 className="brand">TRIVIA <em>9JA</em></h1>
-        </div>
-        <div className="language-area">
-          <div className="language-label"><span><Icon name="globe" /> SELECT QUIZ LANGUAGE</span></div>
-          <div className="language-grid">{languages.map(lang => <button key={lang} className={'language ' + (lang === language ? 'active' : '')} onClick={() => setLanguage(lang)}>{lang}</button>)}</div>
         </div>
       </section>
 
