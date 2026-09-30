@@ -77,7 +77,6 @@ function SoloLevelSelectScreen({
   const [coins, setCoins] = useState(500)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [retryBusy, setRetryBusy] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -164,6 +163,7 @@ function PresentationScreen({
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryBusy, setRetryBusy] = useState(false)
 
   const updateCoins = (value: number | ((current: number) => number)) => {
     setCoins(current => {
