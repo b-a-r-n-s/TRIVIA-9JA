@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
-import { getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt } from './lib/game'
+import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
 type GameMode = 'solo' | 'community'
+type PresentationState = { mode: GameMode; level?: number }
 
 const languages: Language[] = ['English', 'Hausa', 'Yorùbá', 'Igbo']
 
@@ -60,8 +61,92 @@ const languageCodes: Record<Language, 'en' | 'ha' | 'yo' | 'ig'> = {
   Igbo: 'ig',
 }
 
-function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMode; language: Language; isDark: boolean; onClose: () => void }) {
-  const level = mode === 'solo' ? 1 : null
+function SoloLevelSelectScreen({
+  isDark,
+  onClose,
+  onStart,
+  onCoinsChange,
+}: {
+  isDark: boolean
+  onClose: () => void
+  onStart: (level: number) => void
+  onCoinsChange: (coins: number) => void
+}) {
+  const [currentLevel, setCurrentLevel] = useState(1)
+  const [levelsCompleted, setLevelsCompleted] = useState(0)
+  const [coins, setCoins] = useState(500)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const progress = await getPlayerProgress()
+        if (cancelled) return
+        setCurrentLevel(progress.current_level)
+        setLevelsCompleted(progress.levels_completed)
+        setCoins(progress.coins)
+        onCoinsChange(progress.coins)
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load your Solo progress.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [onCoinsChange])
+
+  if (loading) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">SOLO MODE</div><div className="result-mark">…</div><h1>Loading your levels.</h1><p className="result-copy">Checking your progress.</p></div></div>
+
+  if (error) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">COULD NOT LOAD</div><div className="result-mark">!</div><h1>Levels unavailable.</h1><p className="result-copy">{error}</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
+
+  return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
+    <div className="game-modal level-select-modal">
+      <div className="game-head"><button className="icon-button" aria-label="Back to arena" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className="level-coins"><i className="coin-emoji" aria-label="coin" /> {coins}</div></div>
+      <div className="level-select-heading">
+        <div className="result-kicker">SOLO MODE</div>
+        <h1>Choose your level.</h1>
+        <p>Complete each level to unlock the next one. One level is a 10-question, 2-minute run.</p>
+      </div>
+      <div className="level-grid">
+        {Array.from({ length: 10 }, (_, index) => index + 1).map(level => {
+          const completed = level <= levelsCompleted
+          const unlocked = level === currentLevel
+          const status = completed ? 'completed' : unlocked ? 'current' : 'locked'
+          return <button
+            key={level}
+            className={'level-card ' + status}
+            disabled={!unlocked}
+            onClick={() => { onCoinsChange(coins); onStart(level) }}
+          >
+            <span className="level-number">{level}</span>
+            <span className="level-copy"><b>LEVEL {level}</b><small>{completed ? 'COMPLETED' : unlocked ? 'PLAY NOW' : 'LOCKED'}</small></span>
+            <span className="level-status">{completed ? '✓' : unlocked ? '→' : '•••'}</span>
+          </button>
+        })}
+      </div>
+    </div>
+  </div>
+}
+
+function PresentationScreen({
+  mode,
+  level,
+  language,
+  isDark,
+  onClose,
+  initialCoins,
+  onCoinsChange,
+}: {
+  mode: GameMode
+  level: number | null
+  language: Language
+  isDark: boolean
+  onClose: () => void
+  initialCoins: number
+  onCoinsChange: (coins: number) => void
+}) {
   const isCommunity = mode === 'community'
   const [attemptId, setAttemptId] = useState<string | null>(null)
   const [questions, setQuestions] = useState<SoloQuestion[]>([])
@@ -72,12 +157,20 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   const [hintUsed, setHintUsed] = useState(false)
   const [clue, setClue] = useState<string | null>(null)
   const [score, setScore] = useState(0)
-  const [coins, setCoins] = useState(0)
-  const [secondsLeft, setSecondsLeft] = useState(120)
+  const [coins, setCoins] = useState(initialCoins)
+  const [secondsLeft, setSecondsLeft] = useState(isCommunity ? 180 : 120)
   const [finished, setFinished] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const updateCoins = (value: number | ((current: number) => number)) => {
+    setCoins(current => {
+      const next = typeof value === 'function' ? value(current) : value
+      onCoinsChange(next)
+      return next
+    })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -85,42 +178,28 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       setLoading(true)
       setError(null)
       try {
-        let { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          const { data: guest, error: guestError } = await supabase.functions.invoke('guest_session', { body: {} })
-          if (guestError) throw guestError
-          if (!guest?.access_token || !guest?.refresh_token) throw new Error(guest?.error ?? 'Could not start a guest session.')
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: guest.access_token,
-            refresh_token: guest.refresh_token,
-          })
-          if (sessionError || !sessionData.session) throw sessionError ?? new Error('Could not establish the guest session.')
-          session = sessionData.session
-        }
+        const session = await ensurePlayerSession()
         const attemptPromise = isCommunity ? startCommunityAttempt(languageCodes[language]) : Promise.resolve(null)
         const questionsPromise = getNextQuestions(mode, languageCodes[language], level, 10)
-        const [attempt, result] = await Promise.all([attemptPromise, questionsPromise])
+        const progressPromise = isCommunity ? getPlayerProgress() : Promise.resolve(null)
+        const [attempt, result, progress] = await Promise.all([attemptPromise, questionsPromise, progressPromise])
 
-        let communityAttemptId: string | null = null
-        if (attempt) {
-          communityAttemptId = attempt.attempt.id
-          if (!cancelled) {
-            setAttemptId(communityAttemptId)
-            setCoins(attempt.coins)
-          }
-        }
         if (cancelled) return
+        if (attempt) {
+          setAttemptId(attempt.attempt.id)
+          updateCoins(attempt.coins)
+        } else {
+          updateCoins(progress?.coins ?? initialCoins)
+        }
+
         setQuestions(result.questions.map((q: any) => ({
           id: q.id,
           category: String(q.metadata?.category ?? q.question_type ?? 'TRIVIA').toUpperCase(),
           question: q.prompt,
           options: Array.isArray(q.options) ? q.options.map(String) : [],
         })))
-        const user = session?.user
-        if (user) {
-          const { data: profile } = await supabase.from('player_progress').select('coins').eq('user_id', user.id).maybeSingle()
-          if (!cancelled) setCoins(Number(profile?.coins ?? 0))
-        }
+
+        if (!session.user) throw new Error('Could not establish a player session.')
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Could not start the game.')
       } finally {
@@ -128,7 +207,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       }
     })()
     return () => { cancelled = true }
-  }, [language, mode])
+  }, [language, mode, level])
 
   useEffect(() => {
     if (finished || loading || !!error) return
@@ -143,7 +222,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [finished, loading, error, selectedAnswer, questionIndex])
+  }, [finished, loading, error])
 
   const question = questions[questionIndex]
   const answered = selectedAnswer !== null
@@ -169,7 +248,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
         correctAnswer: result.correct_answer ?? null,
       })
       if (result.correct) setScore(value => value + 1)
-      if (result.coins_awarded) setCoins(value => value + result.coins_awarded)
+      if (result.coins_awarded) updateCoins(value => value + result.coins_awarded)
 
       await new Promise(resolve => window.setTimeout(resolve, 450))
       if (!isCommunity && questionIndex === questions.length - 1) {
@@ -208,7 +287,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       if (result.eliminated_option !== null && result.eliminated_option !== undefined) {
         setEliminated(value => [...value, Number(result.eliminated_option)])
       }
-      setCoins(result.coins_remaining)
+      updateCoins(result.coins_remaining)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Hint could not be used.')
     } finally {
@@ -227,7 +306,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       })
       setHintUsed(true)
       setClue(result.clue ?? null)
-      setCoins(result.coins_remaining)
+      updateCoins(result.coins_remaining)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Hint could not be used.')
     } finally {
@@ -235,11 +314,11 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
     }
   }
 
-  if (loading) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">LOADING ROUND</div><div className="result-mark">…</div><h1>Preparing your questions.</h1><p className="result-copy">Connecting to the Trivia 9ja question pool.</p></div></div>
+  if (loading) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">{isCommunity ? 'COMMUNITY CHALLENGE' : 'SOLO MODE'}</div><div className="result-mark">…</div><h1>Preparing your questions.</h1><p className="result-copy">Connecting to the Trivia 9ja question pool.</p></div></div>
 
   if (error && questions.length === 0) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">COULD NOT START</div><div className="result-mark">!</div><h1>Game unavailable.</h1><p className="result-copy">{error}</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
 
-  if (!question) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">NO QUESTIONS AVAILABLE</div><div className="result-mark">?</div><h1>Round unavailable.</h1><p className="result-copy">There are no active questions available for this language and level right now.</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
+  if (!question) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">NO QUESTIONS AVAILABLE</div><div className="result-mark">?</div><h1>Round unavailable.</h1><p className="result-copy">There are no active questions available for this level right now.</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO LEVELS</button></div></div></div>
 
   if (finished) {
     const percentage = Math.round((score / Math.max(questions.length, 1)) * 100)
@@ -251,7 +330,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
         <h1>{score === questions.length ? 'Perfect round.' : score >= 7 ? 'Strong run.' : score >= 4 ? 'Keep pushing.' : 'Round over.'}</h1>
         <p className="result-copy">You got <strong>{score}/{questions.length}</strong> correct and finished with <strong>{percentage}%</strong>.</p>
         <div className="result-stats"><div><b>{score}</b><span>CORRECT</span></div><div><b>+{score}</b><span><i className="coin-emoji" aria-label="coin" /> EARNED</span></div><div><b>{coins}</b><span><i className="coin-emoji" aria-label="coin" /> BALANCE</span></div></div>
-        <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div>
+        <div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO {isCommunity ? 'ARENA' : 'LEVELS'}</button></div>
       </div>
     </div>
   }
@@ -285,13 +364,27 @@ function App() {
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('trivia9ja.language') as Language) || 'English')
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('trivia9ja.theme') as 'dark' | 'light') || 'dark')
   const [modal, setModal] = useState<Modal>(null)
-  const [presentation, setPresentation] = useState<GameMode | null>(null)
+  const [presentation, setPresentation] = useState<PresentationState | null>(null)
+  const [coins, setCoins] = useState(500)
   const [sound, setSound] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('trivia9ja.avatar') || 'eagle')
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('trivia9ja.displayName') || 'NaijaGenius_01')
   const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || 'Trivia King & Lagos Genius 👑')
   const isDark = theme === 'dark'
   const selectedAvatarEmoji = avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session || cancelled) return
+      try {
+        const progress = await getPlayerProgress()
+        if (!cancelled) setCoins(progress.coins)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     localStorage.setItem('trivia9ja.language', language)
@@ -323,7 +416,7 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  const navigate = (nextModal: Modal = null, nextPresentation: GameMode | null = null) => {
+  const navigate = (nextModal: Modal = null, nextPresentation: PresentationState | null = null) => {
     window.history.pushState(
       { trivia9ja: true, modal: nextModal, presentation: nextPresentation },
       '',
@@ -342,7 +435,13 @@ function App() {
     }
   }
 
-  if (presentation) return <PresentationScreen mode={presentation} language={language} isDark={isDark} onClose={goBack} />
+  if (presentation?.mode === 'solo' && !presentation.level) {
+    return <SoloLevelSelectScreen isDark={isDark} onClose={goBack} onStart={level => navigate(null, { mode: 'solo', level })} onCoinsChange={setCoins} />
+  }
+
+  if (presentation) {
+    return <PresentationScreen mode={presentation.mode} level={presentation.level ?? null} language={language} isDark={isDark} onClose={goBack} initialCoins={coins} onCoinsChange={setCoins} />
+  }
 
   return <main className={'app ' + (isDark ? 'dark' : 'light')}>
     <div className="ambient ambient-green" /><div className="ambient ambient-amber" />
@@ -350,7 +449,7 @@ function App() {
       <section className="left-panel">
         <header className="topbar">
           <button className="icon-button" onClick={() => navigate('menu')}><Icon name="menu" /></button>
-          <div className="coin-display"><span>₦</span><b>500</b></div>
+          <div className="coin-display"><i className="coin-emoji" aria-label="coin" /><b>{coins}</b></div>
           <button className="topup btn-shine" onClick={() => navigate('topup')}><Icon name="zap" /> TOP UP</button>
           <button className="icon-button amber" onClick={() => setTheme(isDark ? 'light' : 'dark')}><Icon name={isDark ? 'sun' : 'moon'} /></button>
           <button className="avatar-button" onClick={() => navigate('profile')}>{selectedAvatarEmoji}</button>
@@ -366,12 +465,12 @@ function App() {
       </section>
 
       <section className="right-panel">
-        <button className="card-glow-emerald mode-card" onClick={() => navigate(null, 'solo')}>
+        <button className="card-glow-emerald mode-card" onClick={() => navigate(null, { mode: 'solo' })}>
           <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
           <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. Auto-Advance.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
-        <button className="card-glow-amber mode-card" onClick={() => navigate(null, 'community')}>
+        <button className="card-glow-amber mode-card" onClick={() => navigate(null, { mode: 'community' })}>
           <div className="card-inner-surface" /><div className="card-top"><span>02 COMMUNITY RANKED</span><b className="gold-badge">🔥 FREE TODAY</b></div>
           <div className="mode-body"><div className="mode-icon gold-icon"><Icon name="trophy" /></div><div className="mode-copy"><h2>Take on the nation.</h2><p>Compete against state champions online!</p></div></div>
           <span className="action-button amber-action btn-shine">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
