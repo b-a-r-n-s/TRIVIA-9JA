@@ -1,0 +1,115 @@
+/* TRIVIA 9JA — responsive motion pass */
+
+@keyframes t9RiseIn {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes t9CurrentPulse {
+  0%,100% { box-shadow: 0 10px 34px rgba(0,0,0,.25), 0 0 0 1px rgba(26,164,110,.18); }
+  50% { box-shadow: 0 14px 40px rgba(0,0,0,.30), 0 0 0 1px rgba(26,164,110,.42), 0 0 34px rgba(26,164,110,.10); }
+}
+
+@keyframes t9Shimmer {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(110%); }
+}
+
+@keyframes t9AmbientDrift {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  50% { transform: translate3d(10px,-8px,0) scale(1.04); }
+}
+
+@keyframes t9AnswerIn {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.level-select-modal,
+.retry-modal,
+.result-modal {
+  animation: t9RiseIn .38s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.level-grid .level-card {
+  animation: t9RiseIn .42s cubic-bezier(.2,.8,.2,1) both;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.level-grid .level-card:nth-child(1){animation-delay:.02s}
+.level-grid .level-card:nth-child(2){animation-delay:.05s}
+.level-grid .level-card:nth-child(3){animation-delay:.08s}
+.level-grid .level-card:nth-child(4){animation-delay:.11s}
+.level-grid .level-card:nth-child(5){animation-delay:.14s}
+.level-grid .level-card:nth-child(6){animation-delay:.17s}
+.level-grid .level-card:nth-child(7){animation-delay:.20s}
+.level-grid .level-card:nth-child(8){animation-delay:.23s}
+.level-grid .level-card:nth-child(9){animation-delay:.26s}
+.level-grid .level-card:nth-child(10){animation-delay:.29s}
+
+.level-grid .level-card.current {
+  animation-name: t9RiseIn, t9CurrentPulse;
+  animation-duration: .42s, 2.8s;
+  animation-delay: .02s, .55s;
+  animation-iteration-count: 1, infinite;
+}
+.level-grid .level-card.current:hover { transform: translateY(-3px); }
+.level-grid .level-card:active:not(:disabled) { transform: translateY(0) scale(.985); }
+
+.level-grid .level-card.current::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.10) 50%,transparent 75%);
+  transform:translateX(-110%);
+  animation:t9Shimmer 4.8s ease-in-out infinite;
+  animation-delay:1.2s;
+}
+
+.level-grid .level-card { overflow:hidden; }
+
+.game-modal {
+  animation: t9RiseIn .34s cubic-bezier(.2,.8,.2,1) both;
+}
+.question-stage {
+  animation: t9RiseIn .24s cubic-bezier(.2,.8,.2,1) both;
+}
+.answer-options button {
+  animation: t9AnswerIn .26s cubic-bezier(.2,.8,.2,1) both;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+.answer-options button:nth-child(1){animation-delay:.03s}
+.answer-options button:nth-child(2){animation-delay:.07s}
+.answer-options button:nth-child(3){animation-delay:.11s}
+.answer-options button:nth-child(4){animation-delay:.15s}
+.answer-options button:hover:not(:disabled){transform:translateX(3px)}
+.answer-options button:active:not(:disabled){transform:scale(.992)}
+
+.game-progress span { position:relative; overflow:hidden; }
+.game-progress span::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+  transform:translateX(-100%);
+  animation:t9Shimmer 2.8s linear infinite;
+}
+
+.game-timer.urgent { animation:t9CurrentPulse 1.1s ease-in-out infinite; }
+.retry-cost { animation:t9RiseIn .35s .08s both; }
+.retry-balance { animation:t9RiseIn .35s .15s both; }
+.result-actions .result-primary,
+.result-actions .result-secondary { transition:transform .16s ease, box-shadow .16s ease; }
+.result-actions .result-primary:hover:not(:disabled),
+.result-actions .result-secondary:hover:not(:disabled) { transform:translateY(-2px); }
+.result-actions .result-primary:active:not(:disabled),
+.result-actions .result-secondary:active:not(:disabled) { transform:translateY(0) scale(.985); }
+
+.ambient { animation:t9AmbientDrift 9s ease-in-out infinite; }
+.ambient-amber { animation-delay:-4.5s; }
+
+@media (prefers-reduced-motion:reduce){
+  .level-select-modal,.retry-modal,.result-modal,.game-modal,.question-stage,
+  .level-grid .level-card,.answer-options button,.ambient,.game-progress span::after,
+  .level-grid .level-card.current::after,.game-timer.urgent { animation:none!important; }
+}
