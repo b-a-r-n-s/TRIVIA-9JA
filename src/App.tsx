@@ -68,7 +68,6 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string | null } | null>(null)
-  const [isAdvancing, setIsAdvancing] = useState(false)
   const [eliminated, setEliminated] = useState<number[]>([])
   const [hintUsed, setHintUsed] = useState(false)
   const [clue, setClue] = useState<string | null>(null)
@@ -199,16 +198,12 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       }
       return
     }
-    setIsAdvancing(true)
-    window.setTimeout(() => {
-      setQuestionIndex(value => value + 1)
-      setSelectedAnswer(null)
-      setAnswerResult(null)
-      setEliminated([])
-      setHintUsed(false)
-      setClue(null)
-      setIsAdvancing(false)
-    }, 180)
+    setQuestionIndex(value => value + 1)
+    setSelectedAnswer(null)
+    setAnswerResult(null)
+    setEliminated([])
+    setHintUsed(false)
+    setClue(null)
   }
 
   useEffect(() => {
@@ -279,7 +274,7 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
   const progress = ((questionIndex + 1) / Math.max(questions.length, 1)) * 100
 
   return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
-    <div className={'game-modal ' + (isAdvancing ? 'is-advancing' : '')}>
+    <div className="game-modal">
       <div className="game-head"><button className="icon-button" aria-label="Exit game" onClick={onClose}><Icon name="x" /></button><div className="game-title">TRIVIA <em>9JA</em></div><div className={`game-timer ${secondsLeft <= 20 ? 'urgent' : ''}`}>◷ {formattedTime}</div></div>
       <div className="game-progress"><span style={{ width: progress + '%' }} /></div>
       <div className="solo-meta"><span>{isCommunity ? 'COMMUNITY CHALLENGE' : `SOLO MODE · LEVEL ${level}`}</span><b>QUESTION {questionIndex + 1}<i>/{questions.length}</i></b><strong><i className="coin-emoji" aria-label="coin" /> {coins}</strong></div>
