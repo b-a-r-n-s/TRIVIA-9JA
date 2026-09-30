@@ -31,6 +31,57 @@ export type GameQuestion = {
   metadata: Record<string, unknown> | null
 }
 
+export type PlayerProgress = {
+  user_id: string
+  coins: number
+  current_level: number
+  levels_completed: number
+  total_correct: number
+  total_answered: number
+}
+
+export async function ensurePlayerSession() {
+  let { data: { session } } = await supabase.auth.getSession()
+  if (session) return session
+
+  const { data: guest, error: guestError } = await supabase.functions.invoke('guest_session', { body: {} })
+  if (guestError) throw guestError
+  if (!guest?.access_token || !guest?.refresh_token) {
+    throw new Error(guest?.error ?? 'Could not start a guest session.')
+  }
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+    access_token: guest.access_token,
+    refresh_token: guest.refresh_token,
+  })
+  if (sessionError || !sessionData.session) {
+    throw sessionError ?? new Error('Could not establish the guest session.')
+  }
+  return sessionData.session
+}
+
+export async function getPlayerProgress(): Promise<PlayerProgress> {
+  const session = await ensurePlayerSession()
+  const { data, error } = await supabase
+    .from('player_progress')
+    .select('user_id,coins,current_level,levels_completed,total_correct,total_answered')
+    .eq('user_id', session.user.id)
+    .single()
+
+  if (error || !data) {
+    throw error ?? new Error('Could not load player progress.')
+  }
+
+  return {
+    user_id: data.user_id,
+    coins: Number(data.coins ?? 0),
+    current_level: Number(data.current_level ?? 1),
+    levels_completed: Number(data.levels_completed ?? 0),
+    total_correct: Number(data.total_correct ?? 0),
+    total_answered: Number(data.total_answered ?? 0),
+  }
+}
+
 export async function getNextQuestions(mode: Mode, language: LanguageCode, level: number | null, limit = 10) {
   return invoke<{ pool_key: string; exhausted: boolean; questions: GameQuestion[] }>('get_next_questions', {
     mode, language, level: mode === 'solo' ? level : null, limit,
