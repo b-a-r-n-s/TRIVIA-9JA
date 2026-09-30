@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
-import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt } from './lib/game'
+import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
@@ -77,6 +77,7 @@ function SoloLevelSelectScreen({
   const [coins, setCoins] = useState(500)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryBusy, setRetryBusy] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -275,6 +276,38 @@ function PresentationScreen({
     }
   }
 
+  const unlockRetry = async () => {
+    if (isCommunity || !level || retryBusy) return
+    setRetryBusy(true)
+    setError(null)
+    try {
+      const purchase = await unlockSoloRetry(languageCodes[language], level)
+      updateCoins(purchase.coins_remaining)
+      setLoading(true)
+      const result = await getNextQuestions('solo', languageCodes[language], level, 10)
+      setQuestions(result.questions.map((q: any) => ({
+        id: q.id,
+        category: String(q.metadata?.category ?? q.question_type ?? 'TRIVIA').toUpperCase(),
+        question: q.prompt,
+        options: Array.isArray(q.options) ? q.options.map(String) : [],
+      })))
+      setQuestionIndex(0)
+      setSelectedAnswer(null)
+      setAnswerResult(null)
+      setEliminated([])
+      setHintUsed(false)
+      setClue(null)
+      setScore(0)
+      setSecondsLeft(120)
+      setFinished(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not unlock the retry.')
+    } finally {
+      setLoading(false)
+      setRetryBusy(false)
+    }
+  }
+
   const useEliminate = async () => {
     if (!question || answered || eliminated.length >= 2 || busy) return
     setBusy(true)
@@ -316,7 +349,26 @@ function PresentationScreen({
 
   if (loading) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">{isCommunity ? 'COMMUNITY CHALLENGE' : 'SOLO MODE'}</div><div className="result-mark">…</div><h1>Preparing your questions.</h1><p className="result-copy">Connecting to the Trivia 9ja question pool.</p></div></div>
 
-  if (error && questions.length === 0) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">COULD NOT START</div><div className="result-mark">!</div><h1>Game unavailable.</h1><p className="result-copy">{error}</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO ARENA</button></div></div></div>
+  if (error && questions.length === 0) {
+    const poolExhausted = !isCommunity && error.includes('Not enough new questions remaining')
+    if (poolExhausted) {
+      return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}>
+        <div className="game-modal retry-modal">
+          <div className="result-kicker">SOLO MODE · LEVEL {level}</div>
+          <div className="retry-glyph">↻</div>
+          <h1>Your trial rounds are used.</h1>
+          <p className="result-copy">You have seen all the questions currently available for this level. Unlock another run with coins.</p>
+          <div className="retry-cost"><i className="coin-emoji" aria-label="coin" /><b>{SOLO_RETRY_COST}</b><span>COINS FOR 1 RETRY</span></div>
+          <div className="retry-balance"><span>YOUR BALANCE</span><strong><i className="coin-emoji" aria-label="coin" /> {coins}</strong></div>
+          <div className="result-actions">
+            <button className="result-primary" onClick={unlockRetry} disabled={retryBusy || coins < SOLO_RETRY_COST}>{retryBusy ? 'UNLOCKING…' : coins < SOLO_RETRY_COST ? 'NOT ENOUGH COINS' : 'UNLOCK RETRY'}</button>
+            <button className="result-secondary" onClick={onClose}>BACK TO LEVELS</button>
+          </div>
+        </div>
+      </div>
+    }
+    return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">COULD NOT START</div><div className="result-mark">!</div><h1>Game unavailable.</h1><p className="result-copy">{error}</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO LEVELS</button></div></div></div>
+  }
 
   if (!question) return <div className={'game-overlay solo-arena ' + (isDark ? 'dark' : 'light')}><div className="game-modal result-modal"><div className="result-kicker">NO QUESTIONS AVAILABLE</div><div className="result-mark">?</div><h1>Round unavailable.</h1><p className="result-copy">There are no active questions available for this level right now.</p><div className="result-actions"><button className="result-primary" onClick={onClose}>BACK TO LEVELS</button></div></div></div>
 
