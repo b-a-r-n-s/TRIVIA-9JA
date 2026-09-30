@@ -3,7 +3,7 @@ import { supabase } from './lib/supabase'
 import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
-type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | null
+type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | 'friend-mode' | null
 type GameMode = 'solo' | 'community'
 type PresentationState = { mode: GameMode; language?: Language; level?: number }
 
@@ -33,6 +33,7 @@ function Icon({ name }: { name: string }) {
     chart: <><path d="M4 19V5M4 19h16" /><path d="M7 15v-4M11 15V7M15 15v-7M19 15V4" /></>,
     zap: <path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z" />,
     volume: <><path d="M4 10v4h3l4 3V7l-4 3H4Z" /><path d="M15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="10" cy="7" r="4" /><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
     edit: <><path d="m4 16-.8 4.8L8 20l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17Z" /><path d="m13.5 7.5 3 3" /></>,
   }
   return <svg className="ui-icon" viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
@@ -604,6 +605,11 @@ function App() {
           <div className="mode-body"><div className="mode-icon gold-icon"><Icon name="trophy" /></div><div className="mode-copy"><h2>Take on the nation.</h2><p>Compete against state champions online!</p></div></div>
           <span className="action-button amber-action btn-shine">PLAY COMMUNITY CHALLENGE <Icon name="arrow" /></span>
         </button>
+        <button className="card-glow-friend mode-card friend-card" onClick={() => navigate('friend-mode')}>
+          <div className="card-inner-surface" /><div className="card-top"><span>03 PLAY WITH A FRIEND</span><b className="friend-badge">PRIVATE</b></div>
+          <div className="mode-body"><div className="mode-icon friend-icon"><Icon name="users" /></div><div className="mode-copy"><h2>Challenge someone you know.</h2><p>Create a private match or join one with a code.</p></div></div>
+          <span className="action-button friend-action btn-shine">PLAY WITH A FRIEND <Icon name="arrow" /></span>
+        </button>
         <button className="leaderboard-strip" onClick={() => navigate('leaderboard')}><span className="leader-icon"><Icon name="chart" /></span><span><b>LEADERBOARD</b><small>• Rank #NaijaGenius_01</small></span><Icon name="arrow" /></button>
       </section>
     </div>
@@ -631,6 +637,16 @@ function App() {
 
     {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={goBack}>
       <div className="rank-list">{rankings.map(([name, avatar, state, score], i) => <div className="rank-row" key={name}><b>#{i + 1}</b><span>{avatar}</span><div><strong>{name}</strong><small>{state}</small></div><em>{score}</em></div>)}</div>
+    </Overlay>}
+
+    {modal === 'friend-mode' && <Overlay title="Play With a Friend" onClose={goBack}>
+      <div className="friend-coming">
+        <div className="friend-coming-icon"><Icon name="users" /></div>
+        <div className="result-kicker">PRIVATE CHALLENGE</div>
+        <h3>Challenge a friend.</h3>
+        <p>Create or join a private trivia match. The friend-game flow is the next mode to wire into the existing challenge backend.</p>
+        <button className="save-profile btn-shine" onClick={goBack}>BACK TO ARENA</button>
+      </div>
     </Overlay>}
 
     {modal === 'topup' && <Overlay title="Top Up Coins" onClose={goBack}>
