@@ -87,6 +87,35 @@ export async function ensurePlayerSession() {
   return guestSessionPromise
 }
 
+export async function getAuthUser() {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+}
+
+export async function isGuestUser() {
+  const user = await getAuthUser()
+  return Boolean(user?.user_metadata?.guest === true)
+}
+
+export async function createAccountFromGuest(email: string, password: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    email: email.trim(),
+    password,
+    data: { guest: false, account_type: 'player' },
+  })
+  if (error || !data.user) throw error ?? new Error('Could not create your account.')
+  return data.user
+}
+
+export async function signInPlayer(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  })
+  if (error || !data.session) throw error ?? new Error('Could not sign you in.')
+  return data.session
+}
+
 export async function getPlayerProgress(): Promise<PlayerProgress> {
   const session = await ensurePlayerSession()
   const { data, error } = await supabase
