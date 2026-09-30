@@ -75,28 +75,28 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .card-glow-friend::before{
   content:'';
   position:absolute;
-  inset:0;
-  padding:1.5px;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
   border-radius:inherit;
   background:conic-gradient(
     from 0deg,
-    transparent 0deg 235deg,
-    currentColor 280deg,
-    color-mix(in srgb,currentColor 80%,white) 310deg,
-    currentColor 330deg,
+    transparent 0deg 255deg,
+    rgba(255,255,255,.04) 278deg,
+    currentColor 305deg,
+    currentColor 326deg,
+    rgba(255,255,255,.04) 350deg,
     transparent 360deg
   );
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  mask-composite:exclude;
-  pointer-events:none;
-  will-change:transform;
-  transform-origin:center;
-  backface-visibility:hidden;
-  z-index:0;
-  opacity:.8;
   animation:borderSpin 6s linear infinite;
+  pointer-events:none;
+  z-index:-2;
+  opacity:.76;
+  will-change:transform;
+  transform:translateZ(0);
+  transform-origin:center center;
+  backface-visibility:hidden;
 }
 .card-glow-emerald::before{color:#10b981}
 .card-glow-amber::before{color:#f59e0b;animation-name:borderSpinReverse}
