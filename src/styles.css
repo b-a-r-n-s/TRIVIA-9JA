@@ -129,6 +129,20 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .floating-controls{display:none}
 .overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(16px)}.dialog{position:relative;width:min(420px,100%);padding:24px;border:1px solid rgba(16,185,129,.28);border-radius:25px;background:linear-gradient(145deg,#06120b,#030806);box-shadow:0 30px 90px rgba(0,0,0,.55);animation:dialogIn .25s ease}.dialog-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.05);color:#819088;display:grid;place-items:center;cursor:pointer}.dialog-heading span{color:var(--green);font-size:7px;font-weight:900;letter-spacing:.2em}.dialog-heading h2{margin:5px 0 20px;color:#f8fafc;font-family:Inter,sans-serif;font-size:24px;font-weight:900;letter-spacing:-.04em}
 .dialog-action{width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px;margin-top:7px;border:1px solid rgba(16,185,129,.13);border-radius:13px;background:rgba(0,0,0,.2);color:#dfe7e2;font-size:9px;font-weight:800;cursor:pointer}.dialog-action:hover{border-color:rgba(16,185,129,.38);background:rgba(16,185,129,.06)}
+.auth-modal{max-width:480px!important}
+.auth-modal h1{margin:7px 0 7px;text-align:center;font-size:30px;letter-spacing:-.04em}
+.auth-modal .result-copy{text-align:center;max-width:42ch;margin:0 auto}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:20px 0 14px;padding:4px;border:1px solid rgba(132,153,142,.14);border-radius:11px;background:rgba(0,0,0,.16)}
+.auth-tabs button{min-height:34px;border:0;border-radius:8px;background:transparent;color:#7f8b85;font-size:7px;font-weight:900;letter-spacing:.1em;cursor:pointer}
+.auth-tabs button.active{background:rgba(16,185,129,.14);color:#dfe8e2}
+.auth-input{box-sizing:border-box}
+.auth-note{margin:9px 0 0;color:#89958e;font-size:8px;line-height:1.5;text-align:center}
+.auth-error{margin-top:10px}
+.auth-submit{margin-top:14px}
+.light .auth-tabs{background:#f1f5f3;border-color:rgba(16,50,35,.09)}
+.light .auth-tabs button{color:#65736b}
+.light .auth-tabs button.active{background:#e2f3eb;color:#183028}
+.light .auth-note{color:#65736b}
 .friend-coming{text-align:center;padding:10px 0 2px}
 .friend-coming-icon{width:68px;height:68px;margin:0 auto 14px;display:grid;place-items:center;border-radius:18px;background:rgba(132,153,142,.09);border:1px solid rgba(132,153,142,.22);color:#c5d0ca}
 .friend-coming-icon svg{width:30px;height:30px}
