@@ -170,6 +170,23 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       })
       if (result.correct) setScore(value => value + 1)
       if (result.coins_awarded) setCoins(value => value + result.coins_awarded)
+
+      await new Promise(resolve => window.setTimeout(resolve, 450))
+      if (!isCommunity && questionIndex === questions.length - 1) {
+        await finishSoloLevel(languageCodes[language], level as number)
+        setFinished(true)
+      } else if (isCommunity && questionIndex === questions.length - 1) {
+        if (!attemptId) throw new Error('Community attempt is missing.')
+        await finishCommunityAttempt(attemptId)
+        setFinished(true)
+      } else {
+        setQuestionIndex(value => value + 1)
+        setSelectedAnswer(null)
+        setAnswerResult(null)
+        setEliminated([])
+        setHintUsed(false)
+        setClue(null)
+      }
     } catch (e) {
       setSelectedAnswer(null)
       setAnswerResult(null)
@@ -178,39 +195,6 @@ function PresentationScreen({ mode, language, isDark, onClose }: { mode: GameMod
       setBusy(false)
     }
   }
-
-  const nextQuestion = async () => {
-    if (!answered || !answerResult || busy) return
-    if (questionIndex === questions.length - 1) {
-      setBusy(true)
-      try {
-        if (isCommunity) {
-          if (!attemptId) throw new Error('Community attempt is missing.')
-          await finishCommunityAttempt(attemptId)
-        } else {
-          await finishSoloLevel(languageCodes[language], level as number)
-        }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Could not finish the level.')
-      } finally {
-        setBusy(false)
-        setFinished(true)
-      }
-      return
-    }
-    setQuestionIndex(value => value + 1)
-    setSelectedAnswer(null)
-    setAnswerResult(null)
-    setEliminated([])
-    setHintUsed(false)
-    setClue(null)
-  }
-
-  useEffect(() => {
-    if (!answerResult || busy) return
-    const nextTimer = window.setTimeout(() => { void nextQuestion() }, 450)
-    return () => window.clearTimeout(nextTimer)
-  }, [answerResult, busy, questionIndex])
 
   const useEliminate = async () => {
     if (!question || answered || eliminated.length >= 2 || busy) return
