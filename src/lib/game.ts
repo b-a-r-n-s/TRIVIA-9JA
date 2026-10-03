@@ -166,7 +166,7 @@ export async function getPlayerProfile(): Promise<PlayerProfile | null> {
     .eq('user_id', session.user.id).maybeSingle()
   if (error) throw error
   if (!data) return null
-  return { user_id: data.user_id, display_name: data.display_name, username: data.username, avatar_url: data.avatar_url, theme: data.theme, preferred_language: data.preferred_language }
+  return { user_id: data.user_id, display_name: data.display_name, username: data.username, avatar_url: data.avatar_url, age: data.age, bio: data.bio, theme: data.theme, preferred_language: data.preferred_language }
 }
 
 export async function savePlayerProfile(input: { display_name: string; username?: string | null; avatar_url?: string | null; age?: number | null; bio?: string | null }) {
