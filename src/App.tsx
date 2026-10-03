@@ -840,7 +840,7 @@ function App() {
       <section className="right-panel">
         <button className="card-glow-emerald mode-card" onClick={() => navigate(null, { mode: 'solo' })}>
           <div className="card-inner-surface" /><div className="card-top"><span>01 SOLO MODE</span><b>◷ 2 MIN TIMER</b></div>
-          <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>10 Questions. Auto-Advance.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
+          <div className="mode-body"><div className="mode-icon"><Icon name="brain" /></div><div className="mode-copy"><h2>THINK FAST. PLAY SMART.</h2><div className="tags"><span className="gold">₦ EARN COINS</span></div></div></div>
           <span className="action-button green btn-shine">PLAY 2-MIN SOLO <Icon name="arrow" /></span>
         </button>
         <button className="card-glow-amber mode-card" onClick={() => openProtectedMode('community')}>
