@@ -22,6 +22,7 @@ const rankings = [
 function Icon({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
     menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+    home: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M9 20v-6h6v6" /></>,
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" /></>,
     moon: <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z" />,
     brain: <><path d="M9 4.5A3.5 3.5 0 0 0 5.5 8c0 .5.1 1 .3 1.4A3.5 3.5 0 0 0 7 16a3.5 3.5 0 0 0 6 2.5V5a3.5 3.5 0 0 0-4-.5Z" /><path d="M15 4.5A3.5 3.5 0 0 1 18.5 8c0 .5-.1 1.4-.3 1.4A3.5 3.5 0 0 1 17 16a3.5 3.5 0 0 1-6 2.5V5a3.5 3.5 0 0 1 4-.5Z" /></>,
@@ -639,6 +640,16 @@ function App() {
     }
   }
 
+  const goHome = () => {
+    window.history.replaceState(
+      { trivia9ja: true, modal: null, presentation: null },
+      '',
+      window.location.href
+    )
+    setModal(null)
+    setPresentation(null)
+  }
+
   if (presentation && !presentation.language) {
     return <LanguageSelectScreen
       isDark={isDark}
@@ -722,6 +733,7 @@ function App() {
     </div>
 
     {modal === 'menu' && <Overlay title="Menu & Settings" onClose={goBack}>
+      <button className="dialog-action" onClick={goHome}><span><Icon name="home" /> Home</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> Edit Profile (DP & Name)</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => setTheme(isDark ? 'light' : 'dark')}><span><Icon name={isDark ? 'sun' : 'moon'} /> Theme Mode</span><b>{theme.toUpperCase()}</b></button>
       <button className="dialog-action" onClick={() => setSound(v => !v)}><span><Icon name="volume" /> Sound FX</span><b className={sound ? 'good' : 'bad'}>{sound ? 'ON' : 'OFF'}</b></button>
