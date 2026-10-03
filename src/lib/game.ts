@@ -102,23 +102,21 @@ export type PlayerProfile = {
   display_name: string
   username: string | null
   avatar_url: string | null
+  age: number | null
+  bio: string | null
   theme: 'dark' | 'light' | 'system'
   preferred_language: LanguageCode
 }
 
 export async function createAccountFromGuest(email: string, password: string) {
-  const result = await invoke<{ user_id: string; email: string; verification_required: boolean }>('convert_guest_account', {
-    email: email.trim().toLowerCase(),
+  const cleanEmail = email.trim().toLowerCase()
+  const { data, error } = await supabase.auth.updateUser({
+    email: cleanEmail,
     password,
+    data: { guest: true, account_type: 'player' },
   })
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email: result.email,
-    options: { shouldCreateUser: false },
-  })
-
-  if (error) throw error
-  return result
+  if (error || !data.user) throw error ?? new Error('Could not create your account.')
+  return { user_id: data.user.id, email: cleanEmail, verification_required: true }
 }
 
 export async function verifyGuestAccount(email: string, token: string, displayName: string, avatarUrl: string | null = null) {
@@ -128,7 +126,7 @@ export async function verifyGuestAccount(email: string, token: string, displayNa
   const { data, error } = await supabase.auth.verifyOtp({
     email: email.trim().toLowerCase(),
     token: token.trim(),
-    type: 'email',
+    type: 'email_change',
   })
   if (error || !data.session || !data.user) throw error ?? new Error('That verification code is invalid or expired.')
 
@@ -142,10 +140,8 @@ export async function verifyGuestAccount(email: string, token: string, displayNa
 }
 
 export async function resendGuestVerification(email: string) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email: email.trim().toLowerCase(),
-    options: { shouldCreateUser: false },
-  })
+  const cleanEmail = email.trim().toLowerCase()
+  const { error } = await supabase.auth.updateUser({ email: cleanEmail })
   if (error) throw error
 }
 
@@ -166,19 +162,19 @@ export async function requestPasswordReset(email: string) {
 export async function getPlayerProfile(): Promise<PlayerProfile | null> {
   const session = await ensurePlayerSession()
   const { data, error } = await supabase.from('profiles')
-    .select('user_id,display_name,username,avatar_url,theme,preferred_language')
+    .select('user_id,display_name,username,avatar_url,age,bio,theme,preferred_language')
     .eq('user_id', session.user.id).maybeSingle()
   if (error) throw error
   if (!data) return null
   return { user_id: data.user_id, display_name: data.display_name, username: data.username, avatar_url: data.avatar_url, theme: data.theme, preferred_language: data.preferred_language }
 }
 
-export async function savePlayerProfile(input: { display_name: string; username?: string | null; avatar_url?: string | null }) {
+export async function savePlayerProfile(input: { display_name: string; username?: string | null; avatar_url?: string | null; age?: number | null; bio?: string | null }) {
   const session = await ensurePlayerSession()
   const displayName = input.display_name.trim()
   if (displayName.length < 2 || displayName.length > 24) throw new Error('Display name must be 2–24 characters.')
   const { error } = await supabase.from('profiles').upsert({
-    user_id: session.user.id, display_name: displayName, username: input.username ?? null, avatar_url: input.avatar_url ?? null,
+    user_id: session.user.id, display_name: displayName, username: input.username ?? null, avatar_url: input.avatar_url ?? null, age: input.age ?? null, bio: input.bio ?? null,
   }, { onConflict: 'user_id' })
   if (error) throw error
 }
