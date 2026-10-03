@@ -504,8 +504,7 @@ function PresentationScreen({
       const purchase = await unlockSoloRetry(languageCodes[language], level)
       updateCoins(purchase.coins_remaining)
       setLoading(true)
-      const result = await getNextQuestions('solo', languageCodes[language], level, 10)
-      setQuestions(result.questions.map((q: any) => ({
+      setQuestions(purchase.questions.map((q: any) => ({
         id: q.id,
         category: String(q.metadata?.category ?? q.question_type ?? 'TRIVIA').toUpperCase(),
         question: q.prompt,
