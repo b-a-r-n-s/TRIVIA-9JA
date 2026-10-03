@@ -26,3 +26,27 @@
   .account-gate p:not(.eyebrow){font-size:10px}
   .account-gate-actions{grid-template-columns:1fr;gap:6px}
 }
+
+
+.auth-modal{max-height:min(88vh,760px);overflow-y:auto}
+.auth-avatar-row{display:flex;gap:14px;align-items:flex-start;margin:6px 0 16px}
+.auth-avatar-preview,.profile-avatar{overflow:hidden;display:grid;place-items:center}
+.auth-avatar-preview{width:64px;height:64px;min-width:64px;border:1px solid #2d4036;border-radius:16px;background:#0b120f;font-size:30px}
+.auth-avatar-preview img,.profile-avatar img,.avatar-button img{width:100%;height:100%;object-fit:cover;display:block}
+.auth-avatar-options{min-width:0;flex:1}
+.auth-avatar-grid{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 8px}
+.auth-avatar-grid .avatar-choice{width:38px;height:38px;min-height:38px;padding:0;border-radius:10px}
+.auth-avatar-grid .avatar-choice span{font-size:20px}
+.auth-upload-button,.auth-link-button{border:0;background:none;color:#d8b96c;font:800 8px/1 'Inter',sans-serif;letter-spacing:.12em;cursor:pointer;padding:7px 0}
+.auth-upload-button{text-align:left}
+.auth-upload-button:hover,.auth-link-button:hover{text-decoration:underline}
+.auth-avatar-options small{display:block;color:#7f8b84;font-size:9px}
+.password-field{position:relative}
+.password-field .auth-input{padding-right:58px}
+.password-field button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:#8f9b94;font:800 8px 'Inter',sans-serif;letter-spacing:.08em;cursor:pointer}
+.auth-code-input{font-size:22px!important;letter-spacing:.35em;text-align:center}
+.auth-link-button{display:block;margin:8px auto 0}
+.auth-link-button.muted{color:#7f8b84}
+.forgot-link{margin:7px 0 0;text-align:right}
+.profile-upload-button{margin:0 0 14px;padding:10px 0}
+.avatar-button{overflow:hidden}
