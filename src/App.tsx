@@ -647,10 +647,15 @@ function App() {
   const [coins, setCoins] = useState(500)
   const [sound, setSound] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('trivia9ja.avatar') || 'eagle')
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(() => localStorage.getItem('trivia9ja.avatarUrl'))
+  const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null)
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('trivia9ja.displayName') || 'NaijaGenius_01')
   const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || 'Trivia King & Lagos Genius 👑')
+  const profileFileRef = useRef<HTMLInputElement>(null)
   const isDark = theme === 'dark'
-  const selectedAvatarEmoji = avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅'
+  const selectedAvatarEmoji = profileAvatarUrl?.startsWith('emoji:')
+    ? (avatars.find(a => a[0] === profileAvatarUrl.slice(6))?.[1] || '🦅')
+    : (avatars.find(a => a[0] === selectedAvatar)?.[1] || '🦅')
 
   const openProtectedMode = async (destination: 'community' | 'friend') => {
     try {
@@ -676,6 +681,17 @@ function App() {
       try {
         const progress = await getPlayerProgress()
         if (!cancelled) setCoins(progress.coins)
+        const profile = await getPlayerProfile()
+        if (!cancelled && profile) {
+          setDisplayName(profile.display_name)
+          if (profile.avatar_url?.startsWith('emoji:')) {
+            setSelectedAvatar(profile.avatar_url.slice(6))
+            setProfileAvatarUrl(profile.avatar_url)
+          } else if (profile.avatar_url) {
+            setProfileAvatarUrl(profile.avatar_url)
+          }
+          if (profile.theme !== 'system') setTheme(profile.theme)
+        }
       } catch {}
     })()
     return () => { cancelled = true }
@@ -684,6 +700,8 @@ function App() {
   useEffect(() => {
     localStorage.setItem('trivia9ja.theme', theme)
     localStorage.setItem('trivia9ja.avatar', selectedAvatar)
+    if (profileAvatarUrl) localStorage.setItem('trivia9ja.avatarUrl', profileAvatarUrl)
+    else localStorage.removeItem('trivia9ja.avatarUrl')
     localStorage.setItem('trivia9ja.displayName', displayName)
     localStorage.setItem('trivia9ja.tagline', tagline)
   }, [theme, selectedAvatar, displayName, tagline])
@@ -831,16 +849,34 @@ function App() {
     </Overlay>}
 
     {modal === 'profile' && <Overlay title="Your Profile" onClose={goBack}>
-      <div className="profile-header"><div className="profile-avatar">{selectedAvatarEmoji}</div><div><b>{displayName}</b><span>{tagline}</span><small>Nigeria 🇳🇬</small></div></div>
+      <div className="profile-header">
+        <div className="profile-avatar">{profileAvatarUrl && !profileAvatarUrl.startsWith('emoji:') ? <img src={profileAvatarUrl} alt="" /> : selectedAvatarEmoji}</div>
+        <div><b>{displayName}</b><span>{tagline}</span><small>Nigeria 🇳🇬</small></div>
+      </div>
       <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
     </Overlay>}
 
     {modal === 'edit-profile' && <Overlay title="Edit Your Profile" onClose={goBack}>
       <label className="field-label">SELECT DISPLAY AVATAR (DP)</label>
-      <div className="avatar-grid">{avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-choice ' + (selectedAvatar === id ? 'active' : '')} onClick={() => setSelectedAvatar(id)}><span>{emoji}</span><small>{name}</small></button>)}</div>
-      <label className="field-label">DISPLAY NAME</label><input className="profile-input" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+      <div className="avatar-grid">
+        {avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-choice ' + (selectedAvatar === id && !profileAvatarUrl?.startsWith('http') ? 'active' : '')} onClick={() => { setSelectedAvatar(id); setProfileAvatarUrl('emoji:' + id); setProfileAvatarFile(null) }}><span>{emoji}</span><small>{name}</small></button>)}
+      </div>
+      <input ref={profileFileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={e => { const file = e.target.files?.[0] ?? null; setProfileAvatarFile(file); setProfileAvatarUrl(file ? URL.createObjectURL(file) : profileAvatarUrl) }} />
+      <button className="auth-upload-button profile-upload-button" onClick={() => profileFileRef.current?.click()}>UPLOAD FROM DEVICE / DRIVE</button>
+      <label className="field-label">DISPLAY NAME</label><input className="profile-input" maxLength={24} value={displayName} onChange={e => setDisplayName(e.target.value)} />
       <label className="field-label">BIO / TAGLINE</label><input className="profile-input" value={tagline} onChange={e => setTagline(e.target.value)} />
-      <button className="save-profile btn-shine" onClick={() => navigate('profile')}><span>✓</span> SAVE PROFILE EDITS</button>
+      <button className="save-profile btn-shine" onClick={async () => {
+        try {
+          let avatar = profileAvatarUrl
+          if (profileAvatarFile) avatar = await uploadPlayerAvatar(profileAvatarFile)
+          await savePlayerProfile({ display_name: displayName, avatar_url: avatar })
+          setProfileAvatarUrl(avatar)
+          setProfileAvatarFile(null)
+          navigate('profile')
+        } catch (e) {
+          window.alert(e instanceof Error ? e.message : 'Could not save your profile.')
+        }
+      }}><span>✓</span> SAVE PROFILE EDITS</button>
     </Overlay>}
 
     {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={goBack}>
