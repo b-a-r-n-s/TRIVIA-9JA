@@ -650,7 +650,6 @@ function App() {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(() => localStorage.getItem('trivia9ja.avatarUrl'))
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null)
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('trivia9ja.displayName') || 'NaijaGenius_01')
-  const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || '')
   const [profileAge, setProfileAge] = useState<number | null>(null)
   const [profileBio, setProfileBio] = useState('')
   const [profileStats, setProfileStats] = useState({ levels: 0, correct: 0, answered: 0 })
@@ -709,7 +708,6 @@ function App() {
     if (profileAvatarUrl) localStorage.setItem('trivia9ja.avatarUrl', profileAvatarUrl)
     else localStorage.removeItem('trivia9ja.avatarUrl')
     localStorage.setItem('trivia9ja.displayName', displayName)
-    localStorage.setItem('trivia9ja.tagline', tagline)
   }, [theme, selectedAvatar, displayName, tagline])
 
   useEffect(() => {
