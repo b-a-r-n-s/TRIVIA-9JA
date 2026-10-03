@@ -121,7 +121,7 @@ export async function createAccountFromGuest(email: string, password: string) {
   return result
 }
 
-export async function verifyGuestAccount(email: string, token: string, displayName: string) {
+export async function verifyGuestAccount(email: string, token: string, displayName: string, avatarUrl: string | null = null) {
   const cleanName = displayName.trim()
   if (cleanName.length < 2 || cleanName.length > 24) throw new Error('Display name must be 2–24 characters.')
 
@@ -137,7 +137,7 @@ export async function verifyGuestAccount(email: string, token: string, displayNa
   })
   if (metadataError) throw metadataError
 
-  await savePlayerProfile({ display_name: cleanName, username: null, avatar_url: null })
+  await savePlayerProfile({ display_name: cleanName, username: null, avatar_url: avatarUrl })
   return data.session
 }
 
