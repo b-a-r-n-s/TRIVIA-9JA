@@ -97,14 +97,56 @@ export async function isGuestUser() {
   return Boolean(user?.user_metadata?.guest === true)
 }
 
+export type PlayerProfile = {
+  user_id: string
+  display_name: string
+  username: string | null
+  avatar_url: string | null
+  theme: 'dark' | 'light' | 'system'
+  preferred_language: LanguageCode
+}
+
 export async function createAccountFromGuest(email: string, password: string) {
-  const { data, error } = await supabase.auth.updateUser({
-    email: email.trim(),
+  const result = await invoke<{ user_id: string; email: string; verification_required: boolean }>('convert_guest_account', {
+    email: email.trim().toLowerCase(),
     password,
+  })
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: result.email,
+    options: { shouldCreateUser: false },
+  })
+
+  if (error) throw error
+  return result
+}
+
+export async function verifyGuestAccount(email: string, token: string, displayName: string) {
+  const cleanName = displayName.trim()
+  if (cleanName.length < 2 || cleanName.length > 24) throw new Error('Display name must be 2–24 characters.')
+
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: token.trim(),
+    type: 'email',
+  })
+  if (error || !data.session || !data.user) throw error ?? new Error('That verification code is invalid or expired.')
+
+  const { error: metadataError } = await supabase.auth.updateUser({
     data: { guest: false, account_type: 'player' },
   })
-  if (error || !data.user) throw error ?? new Error('Could not create your account.')
-  return data.user
+  if (metadataError) throw metadataError
+
+  await savePlayerProfile({ display_name: cleanName, username: null, avatar_url: null })
+  return data.session
+}
+
+export async function resendGuestVerification(email: string) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim().toLowerCase(),
+    options: { shouldCreateUser: false },
+  })
+  if (error) throw error
 }
 
 export async function signInPlayer(email: string, password: string) {
@@ -114,6 +156,42 @@ export async function signInPlayer(email: string, password: string) {
   })
   if (error || !data.session) throw error ?? new Error('Could not sign you in.')
   return data.session
+}
+
+export async function requestPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase())
+  if (error) throw error
+}
+
+export async function getPlayerProfile(): Promise<PlayerProfile | null> {
+  const session = await ensurePlayerSession()
+  const { data, error } = await supabase.from('profiles')
+    .select('user_id,display_name,username,avatar_url,theme,preferred_language')
+    .eq('user_id', session.user.id).maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  return { user_id: data.user_id, display_name: data.display_name, username: data.username, avatar_url: data.avatar_url, theme: data.theme, preferred_language: data.preferred_language }
+}
+
+export async function savePlayerProfile(input: { display_name: string; username?: string | null; avatar_url?: string | null }) {
+  const session = await ensurePlayerSession()
+  const displayName = input.display_name.trim()
+  if (displayName.length < 2 || displayName.length > 24) throw new Error('Display name must be 2–24 characters.')
+  const { error } = await supabase.from('profiles').upsert({
+    user_id: session.user.id, display_name: displayName, username: input.username ?? null, avatar_url: input.avatar_url ?? null,
+  }, { onConflict: 'user_id' })
+  if (error) throw error
+}
+
+export async function uploadPlayerAvatar(file: File) {
+  const session = await ensurePlayerSession()
+  if (!file.type.startsWith('image/')) throw new Error('Choose an image file.')
+  if (file.size > 2 * 1024 * 1024) throw new Error('Avatar must be 2 MB or smaller.')
+  const extension = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  const path = session.user.id + '/' + crypto.randomUUID() + '.' + extension
+  const { error } = await supabase.storage.from('avatars').upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type })
+  if (error) throw error
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl
 }
 
 export async function getPlayerProgress(): Promise<PlayerProgress> {
