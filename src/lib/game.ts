@@ -266,17 +266,18 @@ export const SOLO_RETRY_COST = 25
 
 export async function unlockSoloRetry(language: LanguageCode, level: number) {
   const session = await ensurePlayerSession()
-  const { data, error } = await supabase.rpc('unlock_solo_retry', {
+  const { data, error } = await supabase.rpc('unlock_solo_retry_and_get_questions', {
     p_user: session.user.id,
     p_language: language,
     p_level: level,
+    p_limit: 10,
     p_cost: SOLO_RETRY_COST,
   })
-  if (error || !data?.[0]) {
+  if (error || !data?.length) {
     throw error ?? new Error('Could not unlock the retry.')
   }
   return {
     coins_remaining: Number(data[0].coins_remaining ?? 0),
-    retry_credits: Number(data[0].retry_credits ?? 0),
+    questions: data,
   }
 }
