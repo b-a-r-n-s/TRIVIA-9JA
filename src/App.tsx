@@ -771,9 +771,22 @@ function App() {
       isDark={isDark}
       intent="competitive"
       onClose={() => { setAuthDestination(null); goBack() }}
-      onSuccess={() => {
+      onSuccess={async () => {
         const destination = authDestination
         setAuthDestination(null)
+        try {
+          const [progress, profile] = await Promise.all([getPlayerProgress(), getPlayerProfile()])
+          setCoins(progress.coins)
+          if (profile) {
+            setDisplayName(profile.display_name)
+            if (profile.avatar_url?.startsWith('emoji:')) {
+              setSelectedAvatar(profile.avatar_url.slice(6))
+              setProfileAvatarUrl(profile.avatar_url)
+            } else if (profile.avatar_url) {
+              setProfileAvatarUrl(profile.avatar_url)
+            }
+          }
+        } catch {}
         if (destination === 'community') navigate(null, { mode: 'community' })
         else if (destination === 'friend') navigate('friend-mode')
         else goBack()
