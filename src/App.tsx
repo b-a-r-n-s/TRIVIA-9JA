@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
-import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST, isGuestUser, createAccountFromGuest, signInPlayer } from './lib/game'
+import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST, isGuestUser, createAccountFromGuest, verifyGuestAccount, resendGuestVerification, signInPlayer, requestPasswordReset, getPlayerProfile, savePlayerProfile, uploadPlayerAvatar } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
 type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | 'friend-mode' | 'auth' | null
@@ -127,61 +127,150 @@ function AuthScreen({
   onSuccess: () => void
 }) {
   const [tab, setTab] = useState<'create' | 'signin'>(intent === 'save' ? 'create' : 'signin')
+  const [step, setStep] = useState<'details' | 'verify'>('details')
   const [email, setEmail] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
+  const [avatarChoice, setAvatarChoice] = useState('eagle')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const resetForm = () => {
+    setStep('details')
+    setCode('')
+    setError(null)
+    setAvatarUrl(null)
+    setAvatarFile(null)
+  }
 
   const submit = async () => {
-    if (!email.trim() || password.length < 6 || busy) return
-    setBusy(true)
-    setError(null)
-    try {
-      if (tab === 'create') {
+    if (busy) return
+    if (tab === 'create') {
+      if (!email.trim() || password.length < 6 || displayName.trim().length < 2) return
+      setBusy(true); setError(null)
+      try {
+        let selectedAvatar = avatarUrl
+        if (avatarFile) selectedAvatar = await uploadPlayerAvatar(avatarFile)
+        else selectedAvatar = 'emoji:' + avatarChoice
         await createAccountFromGuest(email, password)
-      } else {
-        await signInPlayer(email, password)
-      }
+        setAvatarUrl(selectedAvatar)
+        setStep('verify')
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not create your account.')
+      } finally { setBusy(false) }
+      return
+    }
+
+    if (!email.trim() || !password) return
+    setBusy(true); setError(null)
+    try {
+      await signInPlayer(email, password)
       onSuccess()
     } catch (e) {
-      setError(e instanceof Error ? e.message : tab === 'create' ? 'Could not create your account.' : 'Could not sign you in.')
-    } finally {
-      setBusy(false)
-    }
+      setError(e instanceof Error ? e.message : 'Could not sign you in.')
+    } finally { setBusy(false) }
+  }
+
+  const verify = async () => {
+    if (busy || code.trim().length < 6) return
+    setBusy(true); setError(null)
+    try {
+      await verifyGuestAccount(email, code, displayName, avatarUrl)
+      onSuccess()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'That verification code is invalid or expired.')
+    } finally { setBusy(false) }
+  }
+
+  const resend = async () => {
+    if (busy) return
+    setBusy(true); setError(null)
+    try {
+      await resendGuestVerification(email)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not resend the code.')
+    } finally { setBusy(false) }
+  }
+
+  const sendReset = async () => {
+    if (!email.trim() || busy) return
+    setBusy(true); setError(null); setResetSent(false)
+    try {
+      await requestPasswordReset(email)
+      setResetSent(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send a reset code.')
+    } finally { setBusy(false) }
   }
 
   return <div className={'game-overlay auth-screen ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal auth-modal">
       <button className="dialog-close" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
-      <div className="result-kicker">{intent === 'save' ? 'SAVE YOUR PROGRESS' : 'COMPETITIVE PLAY'}</div>
-      <h1>{intent === 'save' ? 'Keep your progress.' : 'Sign in to compete.'}</h1>
-      <p className="result-copy">
-        {intent === 'save'
-          ? 'Create a player account to keep your coins, levels and stats when you change browser or device.'
-          : 'Community and Friend modes require a player account. Your Solo guest progress stays separate unless you create an account from it.'}
-      </p>
 
-      <div className="auth-tabs">
-        <button className={tab === 'signin' ? 'active' : ''} onClick={() => { setTab('signin'); setError(null) }}>SIGN IN</button>
-        <button className={tab === 'create' ? 'active' : ''} onClick={() => { setTab('create'); setError(null) }}>CREATE ACCOUNT</button>
-      </div>
+      {step === 'verify' ? <>
+        <div className="result-kicker">CHECK YOUR EMAIL</div>
+        <h1>Enter your code.</h1>
+        <p className="result-copy">We sent a verification code to <b>{email}</b>. Enter it here to finish setting up your account.</p>
+        <label className="field-label">6-DIGIT CODE</label>
+        <input className="profile-input auth-input auth-code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="000000" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} />
+        {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
+        <button className="save-profile btn-shine auth-submit" disabled={busy || code.length < 6} onClick={verify}>{busy ? 'VERIFYING…' : 'VERIFY EMAIL'}</button>
+        <button className="auth-link-button" disabled={busy} onClick={resend}>RESEND CODE</button>
+        <button className="auth-link-button muted" disabled={busy} onClick={() => { setStep('details'); setError(null) }}>CHANGE EMAIL</button>
+      </> : <>
+        <div className="result-kicker">{intent === 'save' ? 'SAVE YOUR PROGRESS' : 'COMPETITIVE PLAY'}</div>
+        <h1>{intent === 'save' ? 'Keep your progress.' : 'Sign in to compete.'}</h1>
+        <p className="result-copy">{intent === 'save'
+          ? 'Your Level 1 progress is already saved. Create an account to keep your coins, levels and stats when you switch devices.'
+          : 'Community and Friend modes require a player account.'}</p>
 
-      <label className="field-label">EMAIL</label>
-      <input className="profile-input auth-input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-      <label className="field-label">PASSWORD</label>
-      <input className="profile-input auth-input" type="password" autoComplete={tab === 'create' ? 'new-password' : 'current-password'} placeholder="Minimum 6 characters" value={password} onChange={e => setPassword(e.target.value)} />
+        <div className="auth-tabs">
+          <button className={tab === 'signin' ? 'active' : ''} onClick={() => { setTab('signin'); resetForm() }}>SIGN IN</button>
+          <button className={tab === 'create' ? 'active' : ''} onClick={() => { setTab('create'); resetForm() }}>CREATE ACCOUNT</button>
+        </div>
 
-      {tab === 'signin' && intent === 'competitive' && <p className="auth-note">Already have an account? Sign in. New here? Create an account to keep the guest progress from this browser.</p>}
-      {tab === 'create' && intent === 'save' && <p className="auth-note">This upgrades the guest account you are already using. Your current Solo progress and coins stay with it.</p>}
-      {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
+        {tab === 'create' && <>
+          <label className="field-label">DISPLAY NAME</label>
+          <input className="profile-input auth-input" maxLength={24} autoComplete="nickname" placeholder="Your name in the game" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+          <label className="field-label">PROFILE AVATAR</label>
+          <div className="auth-avatar-row">
+            <div className="auth-avatar-preview">
+              {avatarUrl && !avatarUrl.startsWith('emoji:') ? <img src={avatarUrl} alt="" /> : avatars.find(a => a[0] === avatarChoice)?.[1]}
+            </div>
+            <div className="auth-avatar-options">
+              <div className="avatar-grid auth-avatar-grid">{avatars.map(([id, emoji, name]) =>
+                <button type="button" key={id} title={name} className={'avatar-choice ' + (avatarChoice === id && !avatarUrl ? 'active' : '')} onClick={() => { setAvatarChoice(id); setAvatarUrl(null); setAvatarFile(null) }}><span>{emoji}</span></button>
+              )}</div>
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={e => { const file = e.target.files?.[0] ?? null; setAvatarFile(file); setAvatarUrl(file ? URL.createObjectURL(file) : null) }} />
+              <button type="button" className="auth-upload-button" onClick={() => fileRef.current?.click()}>UPLOAD FROM DEVICE / DRIVE</button>
+              <small>Image only · max 2 MB</small>
+            </div>
+          </div>
+        </>}
 
-      <button className="save-profile btn-shine auth-submit" disabled={busy || !email.trim() || password.length < 6} onClick={submit}>
-        {busy ? 'PLEASE WAIT…' : tab === 'create' ? 'CREATE ACCOUNT' : 'SIGN IN'}
-      </button>
+        <label className="field-label">EMAIL</label>
+        <input className="profile-input auth-input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+        <label className="field-label">PASSWORD</label>
+        <div className="password-field"><input className="profile-input auth-input" type={showPassword ? 'text' : 'password'} autoComplete={tab === 'create' ? 'new-password' : 'current-password'} placeholder={tab === 'create' ? 'Minimum 6 characters' : 'Your password'} value={password} onChange={e => setPassword(e.target.value)} /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'HIDE' : 'SHOW'}</button></div>
+
+        {tab === 'signin' && <button className="auth-link-button forgot-link" disabled={busy || !email.trim()} onClick={sendReset}>FORGOT PASSWORD?</button>}
+        {resetSent && <p className="auth-note">If that email has an account, a password reset email has been sent.</p>}
+        {tab === 'create' && <p className="auth-note">Your current guest progress stays attached to this account. Email verification completes the conversion.</p>}
+        {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
+
+        <button className="save-profile btn-shine auth-submit" disabled={busy || !email.trim() || (tab === 'create' ? password.length < 6 || displayName.trim().length < 2 : !password)} onClick={submit}>
+          {busy ? 'PLEASE WAIT…' : tab === 'create' ? 'CREATE ACCOUNT' : 'SIGN IN'}
+        </button>
+      </>}
     </div>
   </div>
 }
-
 function SoloLevelSelectScreen({
   isDark,
   onClose,
