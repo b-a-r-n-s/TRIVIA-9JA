@@ -178,7 +178,7 @@ function AuthScreen({
   }
 
   const verify = async () => {
-    if (busy || code.trim().length < 6) return
+    if (busy || code.trim().length !== 8) return
     setBusy(true); setError(null)
     try {
       await verifyGuestAccount(email, code, displayName, avatarUrl)
@@ -217,10 +217,10 @@ function AuthScreen({
         <div className="result-kicker">CHECK YOUR EMAIL</div>
         <h1>Enter your code.</h1>
         <p className="result-copy">We sent a verification code to <b>{email}</b>. Enter it here to finish setting up your account.</p>
-        <label className="field-label">6-DIGIT CODE</label>
-        <input className="profile-input auth-input auth-code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="000000" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} />
+        <label className="field-label">8-DIGIT CODE</label>
+        <input className="profile-input auth-input auth-code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="00000000" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} />
         {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
-        <button className="save-profile btn-shine auth-submit" disabled={busy || code.length < 6} onClick={verify}>{busy ? 'VERIFYING…' : 'VERIFY EMAIL'}</button>
+        <button className="save-profile btn-shine auth-submit" disabled={busy || code.length !== 8} onClick={verify}>{busy ? 'VERIFYING…' : 'VERIFY EMAIL'}</button>
         <button className="auth-link-button" disabled={busy} onClick={resend}>RESEND CODE</button>
         <button className="auth-link-button muted" disabled={busy} onClick={() => { setStep('details'); setError(null) }}>CHANGE EMAIL</button>
       </> : <>
@@ -811,7 +811,7 @@ function App() {
           <div className="coin-display"><i className="coin-emoji" aria-label="coin" /><b>{coins}</b></div>
           <button className="topup btn-shine" onClick={() => navigate('topup')}><Icon name="zap" /> TOP UP</button>
           <button className="icon-button amber" onClick={() => setTheme(isDark ? 'light' : 'dark')}><Icon name={isDark ? 'sun' : 'moon'} /></button>
-          <button className="avatar-button" onClick={() => navigate('profile')}>{selectedAvatarEmoji}</button>
+          <button className="avatar-button" onClick={() => navigate('profile')}>{profileAvatarUrl && !profileAvatarUrl.startsWith('emoji:') ? <img src={profileAvatarUrl} alt="" /> : selectedAvatarEmoji}</button>
         </header>
         <div className="brand-area">
           <div className="eyebrow-pill"><span>✦</span> OFFICIAL NIGERIAN TRIVIA</div>
