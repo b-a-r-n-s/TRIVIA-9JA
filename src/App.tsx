@@ -751,6 +751,15 @@ function App() {
     }
   }
 
+  const closeProfileEditor = () => {
+    if (window.history.state?.trivia9ja) {
+      window.history.go(-2)
+    } else {
+      setModal(null)
+      setPresentation(null)
+    }
+  }
+
   if (presentation && !presentation.language) {
     return <LanguageSelectScreen
       isDark={isDark}
@@ -871,7 +880,6 @@ function App() {
         <div><b>{profileStats.answered ? Math.round(profileStats.correct / profileStats.answered * 100) : 0}%</b><span>ACCURACY</span></div>
         <div><b>{coins}</b><span>COINS</span></div>
       </div>
-      <button className="dialog-action profile-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
       <div className="profile-section-label">PLAYER STATUS</div>
       <div className="profile-status-card"><span><Icon name="zap" /></span><div><b>{profileStats.answered ? 'Active player' : 'New player'}</b><small>{profileStats.answered ? 'Keep playing to build your record.' : 'Your first round is waiting.'}</small></div></div>
     </Overlay>}
@@ -896,7 +904,7 @@ function App() {
           await savePlayerProfile({ display_name: displayName, avatar_url: avatar, age: profileAge, bio: profileBio })
           setProfileAvatarUrl(avatar)
           setProfileAvatarFile(null)
-          navigate('profile')
+          closeProfileEditor()
         } catch (e) {
           window.alert(e instanceof Error ? e.message : 'Could not save your profile.')
         }
