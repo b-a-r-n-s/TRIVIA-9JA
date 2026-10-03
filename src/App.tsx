@@ -708,7 +708,7 @@ function App() {
     if (profileAvatarUrl) localStorage.setItem('trivia9ja.avatarUrl', profileAvatarUrl)
     else localStorage.removeItem('trivia9ja.avatarUrl')
     localStorage.setItem('trivia9ja.displayName', displayName)
-  }, [theme, selectedAvatar, displayName, tagline])
+  }, [theme, selectedAvatar, displayName, profileAvatarUrl])
 
   useEffect(() => {
     window.history.replaceState(
@@ -906,7 +906,7 @@ function App() {
     {modal === 'avatar-picker' && <Overlay title="Choose an Avatar" onClose={goBack}>
       <p className="result-copy">Pick a Trivia 9ja avatar. You can change it anytime.</p>
       <div className="avatar-picker-grid">{avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-picker-card ' + (selectedAvatar === id && profileAvatarUrl?.startsWith('emoji:') ? 'active' : '')} onClick={() => { setSelectedAvatar(id); setProfileAvatarUrl('emoji:' + id); setProfileAvatarFile(null); goBack() }}><span>{emoji}</span><small>{name}</small></button>)}</div>
-    </Overlay>
+    </Overlay>}
 
     {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={goBack}>
       <div className="rank-list">{rankings.map(([name, avatar, state, score], i) => <div className="rank-row" key={name}><b>#{i + 1}</b><span>{avatar}</span><div><strong>{name}</strong><small>{state}</small></div><em>{score}</em></div>)}</div>
