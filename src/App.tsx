@@ -3,7 +3,7 @@ import { supabase } from './lib/supabase'
 import { ensurePlayerSession, getPlayerProgress, getNextQuestions, submitAnswer, useHint, finishSoloLevel, startCommunityAttempt, finishCommunityAttempt, unlockSoloRetry, SOLO_RETRY_COST, isGuestUser, createAccountFromGuest, verifyGuestAccount, resendGuestVerification, signInPlayer, requestPasswordReset, getPlayerProfile, savePlayerProfile, uploadPlayerAvatar } from './lib/game'
 
 type Language = 'English' | 'Hausa' | 'Yorùbá' | 'Igbo'
-type Modal = 'menu' | 'profile' | 'edit-profile' | 'leaderboard' | 'topup' | 'friend-mode' | 'auth' | null
+type Modal = 'menu' | 'profile' | 'edit-profile' | 'avatar-picker' | 'leaderboard' | 'topup' | 'friend-mode' | 'auth' | null
 type GameMode = 'solo' | 'community'
 type PresentationState = { mode: GameMode; language?: Language; level?: number }
 
@@ -650,7 +650,10 @@ function App() {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(() => localStorage.getItem('trivia9ja.avatarUrl'))
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null)
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('trivia9ja.displayName') || 'NaijaGenius_01')
-  const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || 'Trivia King & Lagos Genius 👑')
+  const [tagline, setTagline] = useState(() => localStorage.getItem('trivia9ja.tagline') || '')
+  const [profileAge, setProfileAge] = useState<number | null>(null)
+  const [profileBio, setProfileBio] = useState('')
+  const [profileStats, setProfileStats] = useState({ levels: 0, correct: 0, answered: 0 })
   const profileFileRef = useRef<HTMLInputElement>(null)
   const isDark = theme === 'dark'
   const selectedAvatarEmoji = profileAvatarUrl?.startsWith('emoji:')
@@ -681,9 +684,12 @@ function App() {
       try {
         const progress = await getPlayerProgress()
         if (!cancelled) setCoins(progress.coins)
+        setProfileStats({ levels: progress.levels_completed, correct: progress.total_correct, answered: progress.total_answered })
         const profile = await getPlayerProfile()
         if (!cancelled && profile) {
           setDisplayName(profile.display_name)
+          setProfileAge(profile.age)
+          setProfileBio(profile.bio || '')
           if (profile.avatar_url?.startsWith('emoji:')) {
             setSelectedAvatar(profile.avatar_url.slice(6))
             setProfileAvatarUrl(profile.avatar_url)
@@ -747,16 +753,6 @@ function App() {
     }
   }
 
-  const goHome = () => {
-    window.history.replaceState(
-      { trivia9ja: true, modal: null, presentation: null },
-      '',
-      window.location.href
-    )
-    setModal(null)
-    setPresentation(null)
-  }
-
   if (presentation && !presentation.language) {
     return <LanguageSelectScreen
       isDark={isDark}
@@ -779,6 +775,8 @@ function App() {
           setCoins(progress.coins)
           if (profile) {
             setDisplayName(profile.display_name)
+            setProfileAge(profile.age)
+            setProfileBio(profile.bio || '')
             if (profile.avatar_url?.startsWith('emoji:')) {
               setSelectedAvatar(profile.avatar_url.slice(6))
               setProfileAvatarUrl(profile.avatar_url)
@@ -853,44 +851,64 @@ function App() {
     </div>
 
     {modal === 'menu' && <Overlay title="Menu & Settings" onClose={goBack}>
-      <button className="dialog-action" onClick={goHome}><span><Icon name="home" /> Home</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> Edit Profile (DP & Name)</span><Icon name="arrow" /></button>
-      <button className="dialog-action" onClick={() => setTheme(isDark ? 'light' : 'dark')}><span><Icon name={isDark ? 'sun' : 'moon'} /> Theme Mode</span><b>{theme.toUpperCase()}</b></button>
       <button className="dialog-action" onClick={() => setSound(v => !v)}><span><Icon name="volume" /> Sound FX</span><b className={sound ? 'good' : 'bad'}>{sound ? 'ON' : 'OFF'}</b></button>
       <button className="dialog-action" onClick={() => navigate('leaderboard')}><span><Icon name="trophy" /> National Leaderboard</span><Icon name="arrow" /></button>
       <button className="dialog-action" onClick={() => navigate('topup')}><span><Icon name="zap" /> Top Up Coins</span><Icon name="arrow" /></button>
     </Overlay>}
 
-    {modal === 'profile' && <Overlay title="Your Profile" onClose={goBack}>
-      <div className="profile-header">
-        <div className="profile-avatar">{profileAvatarUrl && !profileAvatarUrl.startsWith('emoji:') ? <img src={profileAvatarUrl} alt="" /> : selectedAvatarEmoji}</div>
-        <div><b>{displayName}</b><span>{tagline}</span><small>Nigeria 🇳🇬</small></div>
+    {modal === 'profile' && <Overlay title="" onClose={goBack}>
+      <div className="profile-cover">
+        <div className="profile-cover-mark">TRIVIA <em>9JA</em></div>
       </div>
-      <button className="dialog-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
+      <div className="profile-identity">
+        <div className="profile-avatar-large">{profileAvatarUrl && !profileAvatarUrl.startsWith('emoji:') ? <img src={profileAvatarUrl} alt="" /> : selectedAvatarEmoji}</div>
+        <button className="profile-edit-fab" onClick={() => navigate('edit-profile')} aria-label="Edit profile"><Icon name="edit" /></button>
+        <div className="profile-name-row"><div><h2>{displayName}</h2><span>@{displayName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'player'}</span></div></div>
+        {profileBio && <p className="profile-bio">{profileBio}</p>}
+        <div className="profile-meta"><span>Nigeria</span>{profileAge ? <span>{profileAge} years</span> : null}</div>
+      </div>
+      <div className="profile-stats-row">
+        <div><b>{profileStats.levels}</b><span>LEVELS</span></div>
+        <div><b>{profileStats.answered ? Math.round(profileStats.correct / profileStats.answered * 100) : 0}%</b><span>ACCURACY</span></div>
+        <div><b>{coins}</b><span>COINS</span></div>
+      </div>
+      <button className="dialog-action profile-action" onClick={() => navigate('edit-profile')}><span><Icon name="edit" /> EDIT PROFILE</span><Icon name="arrow" /></button>
+      <div className="profile-section-label">PLAYER STATUS</div>
+      <div className="profile-status-card"><span><Icon name="zap" /></span><div><b>{profileStats.answered ? 'Active player' : 'New player'}</b><small>{profileStats.answered ? 'Keep playing to build your record.' : 'Your first round is waiting.'}</small></div></div>
     </Overlay>}
 
-    {modal === 'edit-profile' && <Overlay title="Edit Your Profile" onClose={goBack}>
-      <label className="field-label">SELECT DISPLAY AVATAR (DP)</label>
-      <div className="avatar-grid">
-        {avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-choice ' + (selectedAvatar === id && !profileAvatarUrl?.startsWith('http') ? 'active' : '')} onClick={() => { setSelectedAvatar(id); setProfileAvatarUrl('emoji:' + id); setProfileAvatarFile(null) }}><span>{emoji}</span><small>{name}</small></button>)}
+    {modal === 'edit-profile' && <Overlay title="Edit Profile" onClose={goBack}>
+      <div className="profile-edit-avatar">
+        <div className="profile-avatar-edit">{profileAvatarUrl && !profileAvatarUrl.startsWith('emoji:') ? <img src={profileAvatarUrl} alt="" /> : selectedAvatarEmoji}</div>
+        <div><b>Profile photo</b><small>Use an avatar or upload your own photo.</small></div>
+      </div>
+      <div className="profile-photo-actions">
+        <button type="button" className="auth-upload-button" onClick={() => profileFileRef.current?.click()}>UPLOAD PHOTO</button>
+        <button type="button" className="auth-upload-button" onClick={() => navigate('avatar-picker')}>CHOOSE AVATAR</button>
       </div>
       <input ref={profileFileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={e => { const file = e.target.files?.[0] ?? null; setProfileAvatarFile(file); setProfileAvatarUrl(file ? URL.createObjectURL(file) : profileAvatarUrl) }} />
-      <button className="auth-upload-button profile-upload-button" onClick={() => profileFileRef.current?.click()}>UPLOAD FROM DEVICE / DRIVE</button>
       <label className="field-label">DISPLAY NAME</label><input className="profile-input" maxLength={24} value={displayName} onChange={e => setDisplayName(e.target.value)} />
-      <label className="field-label">BIO / TAGLINE</label><input className="profile-input" value={tagline} onChange={e => setTagline(e.target.value)} />
+      <label className="field-label">AGE <span className="optional-label">OPTIONAL</span></label><input className="profile-input" type="number" min="13" max="100" placeholder="Your age" value={profileAge ?? ''} onChange={e => setProfileAge(e.target.value ? Number(e.target.value) : null)} />
+      <label className="field-label">BIO <span className="optional-label">OPTIONAL</span></label><textarea className="profile-input profile-bio-input" maxLength={120} placeholder="A little about you" value={profileBio} onChange={e => setProfileBio(e.target.value)} />
       <button className="save-profile btn-shine" onClick={async () => {
         try {
           let avatar = profileAvatarUrl
           if (profileAvatarFile) avatar = await uploadPlayerAvatar(profileAvatarFile)
-          await savePlayerProfile({ display_name: displayName, avatar_url: avatar })
+          await savePlayerProfile({ display_name: displayName, avatar_url: avatar, age: profileAge, bio: profileBio })
           setProfileAvatarUrl(avatar)
           setProfileAvatarFile(null)
           navigate('profile')
         } catch (e) {
           window.alert(e instanceof Error ? e.message : 'Could not save your profile.')
         }
-      }}><span>✓</span> SAVE PROFILE EDITS</button>
+      }}><span>✓</span> SAVE PROFILE</button>
     </Overlay>}
+
+    {modal === 'avatar-picker' && <Overlay title="Choose an Avatar" onClose={goBack}>
+      <p className="result-copy">Pick a Trivia 9ja avatar. You can change it anytime.</p>
+      <div className="avatar-picker-grid">{avatars.map(([id, emoji, name]) => <button key={id} className={'avatar-picker-card ' + (selectedAvatar === id && profileAvatarUrl?.startsWith('emoji:') ? 'active' : '')} onClick={() => { setSelectedAvatar(id); setProfileAvatarUrl('emoji:' + id); setProfileAvatarFile(null); goBack() }}><span>{emoji}</span><small>{name}</small></button>)}</div>
+    </Overlay>
 
     {modal === 'leaderboard' && <Overlay title="Naija National Rankings" onClose={goBack}>
       <div className="rank-list">{rankings.map(([name, avatar, state, score], i) => <div className="rank-row" key={name}><b>#{i + 1}</b><span>{avatar}</span><div><strong>{name}</strong><small>{state}</small></div><em>{score}</em></div>)}</div>
