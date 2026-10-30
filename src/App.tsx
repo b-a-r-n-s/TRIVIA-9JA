@@ -126,27 +126,24 @@ function AuthScreen({
   onClose: () => void
   onSuccess: () => void
 }) {
-  const [tab, setTab] = useState<'create' | 'signin'>(intent === 'save' ? 'create' : 'signin')
-  const [step, setStep] = useState<'details' | 'verify'>('details')
+  const [tab, setTab] = useState<'create' | 'signin'>('create')
+  const [step, setStep] = useState<'choice' | 'details' | 'verify'>('choice')
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
-  const [avatarChoice, setAvatarChoice] = useState('eagle')
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [busy, setBusy] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
 
-  const resetForm = () => {
+  const openForm = (selected: 'create' | 'signin') => {
+    setTab(selected)
     setStep('details')
     setCode('')
+    setPassword('')
     setError(null)
-    setAvatarUrl(null)
-    setAvatarFile(null)
+    setResetSent(false)
   }
 
   const submit = async () => {
@@ -155,11 +152,7 @@ function AuthScreen({
       if (!email.trim() || password.length < 6 || displayName.trim().length < 2) return
       setBusy(true); setError(null)
       try {
-        let selectedAvatar = avatarUrl
-        if (avatarFile) selectedAvatar = await uploadPlayerAvatar(avatarFile)
-        else selectedAvatar = 'emoji:' + avatarChoice
         await createAccountFromGuest(email, password)
-        setAvatarUrl(selectedAvatar)
         setStep('verify')
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not create your account.')
@@ -178,10 +171,10 @@ function AuthScreen({
   }
 
   const verify = async () => {
-    if (busy || code.trim().length < 6) return
+    if (busy || code.trim().length !== 6) return
     setBusy(true); setError(null)
     try {
-      await verifyGuestAccount(email, code, displayName, avatarUrl)
+      await verifyGuestAccount(email, code, displayName, 'emoji:eagle')
       onSuccess()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'That verification code is invalid or expired.')
@@ -211,63 +204,63 @@ function AuthScreen({
 
   return <div className={'game-overlay auth-screen ' + (isDark ? 'dark' : 'light')}>
     <div className="game-modal auth-modal">
-      <button className="dialog-close" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
+      <button type="button" className="dialog-close" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
 
-      {step === 'verify' ? <>
-        <div className="result-kicker">CHECK YOUR EMAIL</div>
-        <h1>Enter your code.</h1>
-        <p className="result-copy">We sent a verification code to <b>{email}</b>. Enter it here to finish setting up your account.</p>
-        <label className="field-label">VERIFICATION CODE</label>
-        <input className="profile-input auth-input auth-code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={8} placeholder="00000000" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} />
-        {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
-        <button className="save-profile btn-shine auth-submit" disabled={busy || code.length < 6} onClick={verify}>{busy ? 'VERIFYING…' : 'VERIFY EMAIL'}</button>
-        <button className="auth-link-button" disabled={busy} onClick={resend}>RESEND CODE</button>
-        <button className="auth-link-button muted" disabled={busy} onClick={() => { setStep('details'); setError(null) }}>CHANGE EMAIL</button>
-      </> : <>
-        <div className="result-kicker">{intent === 'save' ? 'SAVE YOUR PROGRESS' : 'COMPETITIVE PLAY'}</div>
-        <h1>{intent === 'save' ? 'Keep your progress.' : 'Sign in to compete.'}</h1>
-        <p className="result-copy">{intent === 'save'
-          ? 'Your Level 1 progress is already saved. Create an account to keep your coins, levels and stats when you switch devices.'
-          : 'Community and Friend modes require a player account.'}</p>
-
-        <div className="auth-tabs">
-          <button className={tab === 'signin' ? 'active' : ''} onClick={() => { setTab('signin'); resetForm() }}>SIGN IN</button>
-          <button className={tab === 'create' ? 'active' : ''} onClick={() => { setTab('create'); resetForm() }}>CREATE ACCOUNT</button>
+      {step === 'choice' ? <div className="auth-intro">
+        <div className="auth-monogram" aria-hidden="true"><Icon name="chart" /></div>
+        <span className="auth-overline">TRIVIA 9JA / PLAYER ACCOUNT</span>
+        <h1>{intent === 'save' ? 'Keep your progress.' : 'Make your mark.'}</h1>
+        <p className="auth-lede">{intent === 'save'
+          ? 'Keep your levels, coins and stats together. Pick up where you left off on any device.'
+          : 'Save your progress and enter community challenges or private games with friends.'}</p>
+        <div className="auth-benefits" aria-label="What your account keeps">
+          <span><Icon name="brain" /> Levels</span>
+          <span><Icon name="zap" /> Coins</span>
+          <span><Icon name="chart" /> Stats</span>
         </div>
-
-        {tab === 'create' && <>
-          <label className="field-label">DISPLAY NAME</label>
-          <input className="profile-input auth-input" maxLength={24} autoComplete="nickname" placeholder="Your name in the game" value={displayName} onChange={e => setDisplayName(e.target.value)} />
-          <label className="field-label">PROFILE AVATAR</label>
-          <div className="auth-avatar-row">
-            <div className="auth-avatar-preview">
-              {avatarUrl && !avatarUrl.startsWith('emoji:') ? <img src={avatarUrl} alt="" /> : avatars.find(a => a[0] === avatarChoice)?.[1]}
-            </div>
-            <div className="auth-avatar-options">
-              <div className="avatar-grid auth-avatar-grid">{avatars.map(([id, emoji, name]) =>
-                <button type="button" key={id} title={name} className={'avatar-choice ' + (avatarChoice === id && !avatarUrl ? 'active' : '')} onClick={() => { setAvatarChoice(id); setAvatarUrl(null); setAvatarFile(null) }}><span>{emoji}</span></button>
-              )}</div>
-              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={e => { const file = e.target.files?.[0] ?? null; setAvatarFile(file); setAvatarUrl(file ? URL.createObjectURL(file) : null) }} />
-              <button type="button" className="auth-upload-button" onClick={() => fileRef.current?.click()}>UPLOAD FROM DEVICE / DRIVE</button>
-              <small>Image only · max 2 MB</small>
-            </div>
-          </div>
-        </>}
-
-        <label className="field-label">EMAIL</label>
-        <input className="profile-input auth-input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-        <label className="field-label">PASSWORD</label>
-        <div className="password-field"><input className="profile-input auth-input" type={showPassword ? 'text' : 'password'} autoComplete={tab === 'create' ? 'new-password' : 'current-password'} placeholder={tab === 'create' ? 'Minimum 6 characters' : 'Your password'} value={password} onChange={e => setPassword(e.target.value)} /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'HIDE' : 'SHOW'}</button></div>
-
-        {tab === 'signin' && <button className="auth-link-button forgot-link" disabled={busy || !email.trim()} onClick={sendReset}>FORGOT PASSWORD?</button>}
-        {resetSent && <p className="auth-note">If that email has an account, a password reset email has been sent.</p>}
-        {tab === 'create' && <p className="auth-note">Your current guest progress stays attached to this account. Email verification completes the conversion.</p>}
-        {error && <div className="answer-feedback negative auth-error"><div><b>ERROR</b><span>{error}</span></div></div>}
-
-        <button className="save-profile btn-shine auth-submit" disabled={busy || !email.trim() || (tab === 'create' ? password.length < 6 || displayName.trim().length < 2 : !password)} onClick={submit}>
-          {busy ? 'PLEASE WAIT…' : tab === 'create' ? 'CREATE ACCOUNT' : 'SIGN IN'}
+        <button type="button" className="auth-primary" onClick={() => openForm('create')}>
+          Create account <Icon name="arrow" />
         </button>
-      </>}
+        <p className="auth-secondary">Already have an account? <button type="button" onClick={() => openForm('signin')}>Sign in</button></p>
+      </div> : step === 'verify' ? <div className="auth-form-view">
+        <span className="auth-overline">ONE LAST STEP</span>
+        <h1>Check your email.</h1>
+        <p className="auth-lede">Enter the six-digit code sent to <strong>{email}</strong> to finish creating your account.</p>
+        <form onSubmit={e => { e.preventDefault(); void verify() }}>
+          <label className="field-label" htmlFor="auth-code">Verification code</label>
+          <input id="auth-code" className="profile-input auth-input auth-code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} />
+          {error && <p className="auth-error-text" role="alert">{error}</p>}
+          <button type="submit" className="auth-primary" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify email'}<Icon name="arrow" /></button>
+        </form>
+        <button type="button" className="auth-text-action" disabled={busy} onClick={resend}>Resend code</button>
+        <button type="button" className="auth-text-action muted" disabled={busy} onClick={() => { setStep('details'); setCode(''); setError(null) }}>Change email</button>
+      </div> : <div className="auth-form-view">
+        <button type="button" className="auth-back" onClick={() => { setStep('choice'); setError(null) }}>← Back</button>
+        <span className="auth-overline">{tab === 'create' ? 'SAVE YOUR GAME' : 'WELCOME BACK'}</span>
+        <h1>{tab === 'create' ? 'Create your account.' : 'Sign in.'}</h1>
+        <p className="auth-lede">{tab === 'create'
+          ? 'Your current game progress stays with your new account.'
+          : 'Continue playing with your saved levels and coins.'}</p>
+        <form className="auth-fields" onSubmit={e => { e.preventDefault(); void submit() }}>
+          {tab === 'create' && <>
+            <label className="field-label" htmlFor="auth-name">Display name</label>
+            <input id="auth-name" className="profile-input auth-input" minLength={2} maxLength={24} required autoComplete="nickname" placeholder="How players will know you" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+          </>}
+          <label className="field-label" htmlFor="auth-email">Email</label>
+          <input id="auth-email" className="profile-input auth-input" type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+          <label className="field-label" htmlFor="auth-password">Password</label>
+          <div className="password-field">
+            <input id="auth-password" className="profile-input auth-input" type={showPassword ? 'text' : 'password'} required minLength={tab === 'create' ? 6 : undefined} autoComplete={tab === 'create' ? 'new-password' : 'current-password'} placeholder={tab === 'create' ? 'At least 6 characters' : 'Your password'} value={password} onChange={e => setPassword(e.target.value)} />
+            <button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
+          </div>
+          {tab === 'signin' && <button type="button" className="auth-text-action forgot-link" disabled={busy || !email.trim()} onClick={sendReset}>Forgot password?</button>}
+          {resetSent && <p className="auth-note">If an account exists for that email, a reset link has been sent.</p>}
+          {error && <p className="auth-error-text" role="alert">{error}</p>}
+          <button type="submit" className="auth-primary" disabled={busy || !email.trim() || (tab === 'create' ? password.length < 6 || displayName.trim().length < 2 : !password)}>
+            {busy ? 'Please wait…' : tab === 'create' ? 'Create account' : 'Sign in'} <Icon name="arrow" />
+          </button>
+        </form>
+      </div>}
     </div>
   </div>
 }
