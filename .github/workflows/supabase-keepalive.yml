@@ -4,6 +4,9 @@ on:
   schedule:
     # Three database requests daily; independent of visits to the website.
     - cron: '17 5,13,21 * * *'
+    # Weekly safeguard: GitHub disables scheduled workflows in public repos
+    # after 60 days without repository commits.
+    - cron: '41 4 * * 0'
   workflow_dispatch:
   push:
     paths:
@@ -39,3 +42,32 @@ jobs:
             exit 1
           fi
           echo "Supabase database query succeeded."
+
+
+  keep-schedule-enabled:
+    if: github.event_name == 'schedule' && github.event.schedule == '41 4 * * 0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - name: Check out latest main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Prevent GitHub disabling the schedule after 60 days
+        shell: bash
+        run: |
+          set -euo pipefail
+          last_commit_epoch="$(git log -1 --format=%ct)"
+          now_epoch="$(date -u +%s)"
+          age_days=$(((now_epoch - last_commit_epoch) / 86400))
+          echo "Latest repository commit is \${age_days} days old."
+          if (( age_days >= 40 )); then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "chore: keep scheduled workflows enabled"
+            git push origin HEAD:main
+          else
+            echo "Repository is active; no maintenance commit needed."
+          fi
